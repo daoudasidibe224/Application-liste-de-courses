@@ -1,6 +1,17 @@
 import { Injectable } from '@angular/core';
 export interface Liste { _id: string; titre: string; }
 export interface Piece { _id: string; _listeId: string; titre: string; achetee: boolean; }
+type Decoder<T> = (value: unknown) => T;
+function object(value: unknown): Record<string, unknown> {
+ if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error('Réponse serveur invalide.');
+ return Object.fromEntries(Object.entries(value));
+}
+function field(value: unknown): string { if (typeof value !== 'string') throw new Error('Réponse serveur invalide.'); return value; }
+export const listData: Decoder<Liste> = value => { const item = object(value); return { _id: field(item._id), titre: field(item.titre) }; };
+export const pieceData: Decoder<Piece> = value => { const item = object(value); if (typeof item.achetee !== 'boolean') throw new Error('Réponse serveur invalide.'); return { _id: field(item._id), _listeId: field(item._listeId), titre: field(item.titre), achetee: item.achetee }; };
+export const listArray: Decoder<Liste[]> = value => { if (!Array.isArray(value)) throw new Error('Réponse serveur invalide.'); return value.map(listData); };
+export const pieceArray: Decoder<Piece[]> = value => { if (!Array.isArray(value)) throw new Error('Réponse serveur invalide.'); return value.map(pieceData); };
+export const ignoreData: Decoder<void> = () => undefined;
 @Injectable({ providedIn: 'root' })
 export class Api {
   private refresh?: Promise<void>;
@@ -8,8 +19,8 @@ export class Api {
   clearSession() { for (const key of ['idUtilisateur', 'x-access-token', 'x-refresh-token']) localStorage.removeItem(key); }
   async auth(path: string, body: object) {
     const response = await fetch('/api/' + path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-    const user = await this.read(response);
-    localStorage.setItem('idUtilisateur', user._id);
+    const user = object(await this.read(response));
+    localStorage.setItem('idUtilisateur', field(user._id));
     localStorage.setItem('x-access-token', response.headers.get('x-access-token') || '');
     localStorage.setItem('x-refresh-token', response.headers.get('x-refresh-token') || '');
   }
@@ -20,24 +31,24 @@ export class Api {
   private sessionHeaders() { return { '_id': localStorage.getItem('idUtilisateur') || '', 'x-refresh-token': localStorage.getItem('x-refresh-token') || '' }; }
   private async refreshToken() {
     const response = await fetch('/api/utilisateurs/moi/access-token', { headers: this.sessionHeaders() });
-    const data = await this.read(response);
-    localStorage.setItem('x-access-token', data.accessToken);
+    const data = object(await this.read(response));
+    localStorage.setItem('x-access-token', field(data.accessToken));
   }
-  async request<T>(path: string, method = 'GET', body?: object, retry = true): Promise<T> {
+  async request<T>(path: string, decode: Decoder<T>, method = 'GET', body?: object, retry = true): Promise<T> {
     const response = await fetch('/api/' + path, { method, headers: { 'Content-Type': 'application/json', 'x-access-token': localStorage.getItem('x-access-token') || '' }, ...(body ? { body: JSON.stringify(body) } : {}) });
     if (response.status === 401 && retry && this.hasSession()) {
       try {
         this.refresh ||= this.refreshToken().finally(() => { this.refresh = undefined; });
         await this.refresh;
-        return await this.request<T>(path, method, body, false);
+        return await this.request(path, decode, method, body, false);
       } catch (error) { this.clearSession(); throw error; }
     }
     if (response.status === 401) this.clearSession();
-    return this.read(response);
+    return decode(await this.read(response));
   }
   private async read(response: Response) {
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(data.message || 'Le serveur ne répond pas. Réessayez.');
+    const data: unknown = await response.json().catch(() => ({}));
+    if (!response.ok) { const body = object(data); throw new Error(typeof body.message === 'string' ? body.message : 'Le serveur ne répond pas. Réessayez.'); }
     return data;
   }
 }

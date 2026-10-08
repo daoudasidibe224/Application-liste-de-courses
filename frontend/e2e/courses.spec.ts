@@ -66,3 +66,26 @@ test('erreur de connexion visible et accès aux listes protégé', async ({ page
   await expect(page.getByRole('alert')).toHaveText('Email ou mot de passe invalide.');
   await expect(page.getByRole('button', { name: 'Se connecter', exact: true })).toBeEnabled();
 });
+
+
+test('clavier et persistance à 320 pixels', async ({ page }) => {
+ await page.setViewportSize({ width: 320, height: 900 });
+ await page.goto('/inscription');
+ await page.getByLabel('Prénom', { exact: true }).focus();
+ await page.keyboard.type('Clavier'); await page.keyboard.press('Tab'); await page.keyboard.type('Test');
+ await page.keyboard.press('Tab'); await page.keyboard.type(`keyboard-${Date.now()}@example.fr`);
+ await page.keyboard.press('Tab'); await page.keyboard.type('Passphrase-123'); await expect(page.getByRole('button', { name: 'Créer mon compte' })).toBeEnabled(); await page.keyboard.press('Tab'); await page.keyboard.press('Enter');
+ await expect(page.getByRole('heading', { name: 'Tout commence par une liste.' })).toBeVisible();
+ await page.getByRole('link', { name: 'Créer une liste', exact: true }).focus(); await page.keyboard.press('Enter');
+ await page.getByLabel('Nom de la liste').focus(); await page.keyboard.type('Clavier samedi'); await page.keyboard.press('Enter');
+ await expect(page.getByRole('heading', { name: 'Clavier samedi' })).toBeVisible();
+ await page.getByLabel('Nouveau produit').focus(); await page.keyboard.type('Poires'); await page.keyboard.press('Enter');
+ const checkbox = page.getByRole('checkbox', { name: 'Poires' }); await expect(checkbox).toBeVisible();
+ await checkbox.focus(); await page.keyboard.press('Space'); await expect(checkbox).toBeChecked();
+ await page.reload(); await expect(checkbox).toBeChecked();
+ await page.getByRole('link', { name: 'Modifier Poires' }).focus(); await page.keyboard.press('Enter');
+ await expect(page.getByLabel('Nom du produit')).toHaveValue('Poires');
+ expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();
+ await page.getByRole('link', { name: 'Annuler', exact: true }).focus(); await page.keyboard.press('Enter');
+ await expect(page.getByRole('heading', { name: 'Clavier samedi' })).toBeVisible();
+});

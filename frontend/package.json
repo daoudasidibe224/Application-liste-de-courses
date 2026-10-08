@@ -9,7 +9,8 @@
     "start": "ng serve --proxy-config proxy.conf.json",
     "build": "ng build",
     "check": "tsc --noEmit -p tsconfig.app.json",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "lint": "cd .. && frontend/node_modules/.bin/eslint frontend/src backend --ext .ts"
   },
   "dependencies": {
     "@angular/common": "22.2.1",
@@ -26,6 +27,8 @@
     "@angular/cli": "22.2.2",
     "@angular/compiler-cli": "22.2.1",
     "@playwright/test": "^1.64.0",
-    "typescript": "~6.0.0"
+    "typescript": "~6.0.0",
+    "eslint": "^9.39.0",
+    "typescript-eslint": "^8.57.0"
   }
 }

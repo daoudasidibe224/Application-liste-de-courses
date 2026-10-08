@@ -1,4 +1,4 @@
-# Mes courses
+# Carnet de courses
 
 Une application pour préparer ses courses et suivre les produits achetés. Chaque compte dispose de ses propres listes, enregistrées dans MongoDB.
 
@@ -14,7 +14,7 @@ L'interface s'adapte au téléphone et au bureau. Les formulaires ont des libell
 
 ## Stack
 
-Angular 22 avec composants standalone et TypeScript 6 pour le client. Node.js, Express 5, Mongoose 9, MongoDB, bcrypt et JWT pour l'API. Le projet utilise du CSS natif et n'a pas de dépendance à un service payant.
+Angular 22 avec composants standalone et TypeScript 6 pour le client. TypeScript strict côté client et API. Node.js, Express 5, Mongoose 9, MongoDB, bcrypt et JWT pour l'API. Le projet utilise du CSS natif et n'a pas de dépendance à un service payant.
 
 ## Installation
 
@@ -62,8 +62,10 @@ Le serveur refuse de démarrer sans configuration valide. Ne pas publier le fich
 ## Scripts et tests
 
 ```sh
+npm run lint --prefix frontend
 npm run build --prefix frontend
 npm run check --prefix frontend
+npm run check --prefix backend
 npm test --prefix backend
 ```
 
@@ -77,7 +79,7 @@ npx playwright install chromium
 npm run test:e2e
 ```
 
-Playwright lance une API avec une base de test temporaire et le client sur le port 4314. Les ports 3000 et 4314 doivent être libres. Le test couvre un parcours complet et le débordement horizontal aux largeurs 320, 390, 800 et 1440 pixels.
+Playwright lance une API avec une base de test temporaire et le client sur le port 4314. Les ports 3000 et 4314 doivent être libres. Les tests couvrent le clavier, la persistance après rechargement, un parcours complet et le débordement horizontal aux largeurs 320, 390, 800 et 1440 pixels.
 
 L'API s'exécute sans surveillance de fichiers avec `npm start --prefix backend`. Le build du client se trouve dans `frontend/dist/frontend/browser`.
 

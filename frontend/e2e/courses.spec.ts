@@ -77,9 +77,9 @@ test('clavier et persistance à 320 pixels', async ({ page }) => {
  await page.keyboard.press('Tab'); await page.keyboard.type('Passphrase-123'); await expect(page.getByRole('button', { name: 'Créer mon compte' })).toBeEnabled(); await page.keyboard.press('Tab'); await page.keyboard.press('Enter');
  await expect(page.getByRole('heading', { name: 'Tout commence par une liste.' })).toBeVisible();
  await page.getByRole('link', { name: 'Créer une liste', exact: true }).focus(); await page.keyboard.press('Enter');
- await page.getByLabel('Nom de la liste').focus(); await page.keyboard.type('Clavier samedi'); await page.keyboard.press('Enter');
+ await page.getByLabel('Nom de la liste').focus(); await page.keyboard.type('Clavier samedi'); await expect(page.getByRole('button', { name: 'Enregistrer' })).toBeEnabled(); await page.keyboard.press('Enter');
  await expect(page.getByRole('heading', { name: 'Clavier samedi' })).toBeVisible();
- await page.getByLabel('Nouveau produit').focus(); await page.keyboard.type('Poires'); await page.keyboard.press('Enter');
+ await page.getByLabel('Nouveau produit').focus(); await page.keyboard.type('Poires'); await expect(page.getByRole('button', { name: '+ Ajouter' })).toBeEnabled(); await page.keyboard.press('Enter');
  const checkbox = page.getByRole('checkbox', { name: 'Poires' }); await expect(checkbox).toBeVisible();
  await checkbox.focus(); await page.keyboard.press('Space'); await expect(checkbox).toBeChecked();
  await page.reload(); await expect(checkbox).toBeChecked();

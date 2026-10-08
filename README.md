@@ -79,7 +79,7 @@ npx playwright install chromium
 npm run test:e2e
 ```
 
-Playwright lance une API avec une base de test temporaire et le client sur le port 4314. Les ports 3000 et 4314 doivent être libres. Les tests couvrent le clavier, la persistance après rechargement, un parcours complet et le débordement horizontal aux largeurs 320, 390, 800 et 1440 pixels.
+Playwright lance une API avec une base de test temporaire et le client sur le port 4534. Les ports 4434 et 4534 doivent être libres. Les tests couvrent le clavier, la persistance après rechargement, un parcours complet et le débordement horizontal aux largeurs 320, 390, 800 et 1440 pixels.
 
 L'API s'exécute sans surveillance de fichiers avec `npm start --prefix backend`. Le build du client se trouve dans `frontend/dist/frontend/browser`.
 

@@ -29,7 +29,7 @@ jobs:
       - run: docker network create qa-network
       - run: docker run -d --network qa-network --name qa-mongo mongo:8
       - run: docker run -d --network qa-network --name qa-app -p 3080:3000 -e MONGODB_URI=mongodb://qa-mongo:27017/courses -e JWT_SECRET=container-integration-test-secret-at-least-32 carnet-de-courses:test
-      - run: curl --fail --retry 20 --retry-connrefused --retry-delay 2 http://127.0.0.1:3080/health
+      - run: curl --fail --retry 20 --retry-all-errors --retry-delay 2 --retry-max-time 60 --max-time 5 http://127.0.0.1:3080/health
       - run: curl --fail http://127.0.0.1:3080/inscription
       - run: test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3080/api/listes)" = 401
       - if: failure()

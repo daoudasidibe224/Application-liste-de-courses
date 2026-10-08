@@ -1,16 +1,83 @@
 <a class="skip" href="#main">Aller au contenu</a>
-<header class="header"><a class="brand" routerLink="/listes"><span class="brand-mark" aria-hidden="true">✓</span> Carnet de courses</a>
-<button class="quiet" (click)="logout()" [disabled]="busy()">Déconnexion</button></header><main id="main">
+<header class="header">
+  <a class="brand" routerLink="/listes"
+    ><span class="brand-mark" aria-hidden="true">✓</span> Carnet de courses</a
+  >
+  <button class="quiet" (click)="logout()" [disabled]="busy()">
+    Déconnexion
+  </button>
+</header>
+<main id="main">
   <div class="workspace" [attr.aria-busy]="loading()">
-    <aside><p class="eyebrow">Votre carnet</p><h2>Mes listes</h2><nav aria-label="Listes de courses">@for (list of lists(); track list._id) { <a class="list-link" [class.active]="list._id === selected()" [attr.aria-current]="list._id === selected() ? 'page' : null" [routerLink]="['/listes', list._id]"><span aria-hidden="true">▤</span>{{ list.titre }}<span class="arrow" aria-hidden="true">↗</span></a> } @empty { <p class="muted">Aucune liste pour le moment.</p> }</nav><a class="new-list" routerLink="/nouvelle-liste">+ Nouvelle liste</a><p class="aside-note">Un panier bien préparé commence ici.</p></aside>
+    <aside>
+      <p class="eyebrow">Votre carnet</p>
+      <h2>Mes listes</h2>
+      <nav aria-label="Listes de courses">
+        @for (list of lists(); track list._id) {
+        <a
+          class="list-link"
+          [class.active]="list._id === selected()"
+          [attr.aria-current]="list._id === selected() ? 'page' : null"
+          [routerLink]="['/listes', list._id]"
+          ><span aria-hidden="true">▤</span>{{ list.titre }}<span
+            class="arrow"
+            aria-hidden="true"
+            >↗</span
+          ></a
+        >
+        } @empty {
+        <p class="muted">Aucune liste pour le moment.</p>
+        }
+      </nav>
+      <a class="new-list" routerLink="/nouvelle-liste">+ Nouvelle liste</a>
+      <p class="aside-note">Un panier bien préparé commence ici.</p>
+    </aside>
     <section class="content">
-      @if (error()) { <p class="error" role="alert">{{ error() }}</p> }
+      @if (error()) {
+      <p class="error" role="alert">{{ error() }}</p>
+      }
       <p class="sr-only" aria-live="polite">{{ notice() }}</p>
-      @if (loading()) { <p role="status">Chargement de vos courses…</p> }
-      @else {
-        <a class="back" [routerLink]="selected() ? ['/listes', selected()] : ['/listes']">← Retour aux listes</a><p class="eyebrow">Votre carnet de courses</p><h1>{{ mode() === 'new-list' ? 'Une nouvelle liste' : mode() === 'edit-list' ? 'Renommer la liste' : mode() === 'new-piece' ? 'Ajouter un produit' : 'Modifier le produit' }}</h1>
-        <form class="editor" (ngSubmit)="saveTitle()" #titleForm="ngForm"><label>{{ mode() === 'new-list' || mode() === 'edit-list' ? 'Nom de la liste' : 'Nom du produit' }}<input name="title" [(ngModel)]="title" required maxlength="200" placeholder="Ex. Courses de la semaine"></label><div class="actions"><a class="quiet" [routerLink]="selected() ? ['/listes', selected()] : ['/listes']">Annuler</a><button class="primary" [disabled]="titleForm.invalid || !title.trim() || busy()">{{ busy() ? 'Enregistrement…' : 'Enregistrer' }}</button></div></form>
+      @if (loading()) {
+      <p role="status">Chargement de vos courses…</p>
+      } @else {
+      <a
+        class="back"
+        [routerLink]="selected() ? ['/listes', selected()] : ['/listes']"
+        >← Retour aux listes</a
+      >
+      <p class="eyebrow">Votre carnet de courses</p>
+      <h1>
+        {{ mode() === 'new-list' ? 'Une nouvelle liste' : mode() === 'edit-list'
+        ? 'Renommer la liste' : mode() === 'new-piece' ? 'Ajouter un produit' :
+        'Modifier le produit' }}
+      </h1>
+      <form class="editor" (ngSubmit)="saveTitle()" #titleForm="ngForm">
+        <label
+          >{{ mode() === 'new-list' || mode() === 'edit-list' ? 'Nom de la
+          liste' : 'Nom du produit' }}<input
+            name="title"
+            [(ngModel)]="title"
+            required
+            maxlength="200"
+            placeholder="Ex. Courses de la semaine"
+        /></label>
+        <div class="actions">
+          <a
+            class="quiet"
+            [routerLink]="selected() ? ['/listes', selected()] : ['/listes']"
+            >Annuler</a
+          ><button
+            class="primary"
+            [disabled]="titleForm.invalid || !title.trim() || busy()"
+          >
+            {{ busy() ? 'Enregistrement…' : 'Enregistrer' }}
+          </button>
+        </div>
+      </form>
       }
     </section>
   </div>
-</main><footer>Carnet de courses <span>Un petit carnet pour les courses du quotidien.</span></footer>
+</main>
+<footer>
+  Carnet de courses <span>Un petit carnet pour les courses du quotidien.</span>
+</footer>

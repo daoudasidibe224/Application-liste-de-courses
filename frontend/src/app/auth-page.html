@@ -1,18 +1,97 @@
 <a class="skip" href="#main">Aller au contenu</a>
-<header class="header"><a class="brand" routerLink="/listes"><span class="brand-mark" aria-hidden="true">✓</span> Carnet de courses</a>
-</header><main id="main">
+<header class="header">
+  <a class="brand" routerLink="/listes"
+    ><span class="brand-mark" aria-hidden="true">✓</span> Carnet de courses</a
+  >
+</header>
+<main id="main">
   <div class="auth-layout">
-    <section class="intro"><p class="eyebrow">Le quotidien, un peu plus simple</p><h1>Une liste.<br>Moins d'oublis.</h1><p>Préparez vos courses, cochez les produits au fil des rayons et retrouvez vos listes à la prochaine visite.</p><div class="illustration" aria-hidden="true"><span>Votre prochain panier</span><div>✓ &nbsp; Pain complet</div><div>○ &nbsp; Tomates</div><div>○ &nbsp; Un peu de chocolat</div><b>Tout est sur la liste.</b></div></section>
-    <section class="auth-card"><p class="eyebrow">Bienvenue chez vous</p><h2>{{ mode() === 'login' ? 'Se connecter' : 'Créer un compte' }}</h2><p class="muted">Vos listes vous attendent.</p>
+    <section class="intro">
+      <p class="eyebrow">Le quotidien, un peu plus simple</p>
+      <h1>Une liste.<br />Moins d'oublis.</h1>
+      <p>
+        Préparez vos courses, cochez les produits au fil des rayons et retrouvez
+        vos listes à la prochaine visite.
+      </p>
+      <div class="illustration" aria-hidden="true">
+        <span>Votre prochain panier</span>
+        <div>✓ &nbsp; Pain complet</div>
+        <div>○ &nbsp; Tomates</div>
+        <div>○ &nbsp; Un peu de chocolat</div>
+        <b>Tout est sur la liste.</b>
+      </div>
+    </section>
+    <section class="auth-card">
+      <p class="eyebrow">Bienvenue chez vous</p>
+      <h2>{{ mode() === 'login' ? 'Se connecter' : 'Créer un compte' }}</h2>
+      <p class="muted">Vos listes vous attendent.</p>
       <form (ngSubmit)="authenticate()" #authForm="ngForm">
-        @if (mode() === 'inscription') { <div class="names"><label>Prénom<input name="firstName" [(ngModel)]="firstName" required maxlength="100" autocomplete="given-name"></label><label>Nom<input name="lastName" [(ngModel)]="lastName" required maxlength="100" autocomplete="family-name"></label></div> }
-        <label>Adresse email<input name="email" type="email" [(ngModel)]="email" required email maxlength="254" autocomplete="email" placeholder="vous@exemple.fr"></label>
-        <label>Mot de passe<input name="password" type="password" [(ngModel)]="password" required minlength="8" maxlength="72" [autocomplete]="mode() === 'login' ? 'current-password' : 'new-password'"></label>
-        @if (mode() === 'inscription') { <p class="help">Entre 8 et 72 octets. Les caractères accentués comptent pour plusieurs octets.</p> }
-        @if (error()) { <p class="error" role="alert">{{ error() }}</p> }
-        <button class="primary full" type="submit" [disabled]="authForm.invalid || busy()">{{ busy() ? 'Connexion en cours…' : mode() === 'login' ? 'Se connecter' : 'Créer mon compte' }}</button>
+        @if (mode() === 'inscription') {
+        <div class="names">
+          <label
+            >Prénom<input
+              name="firstName"
+              [(ngModel)]="firstName"
+              required
+              maxlength="100"
+              autocomplete="given-name" /></label
+          ><label
+            >Nom<input
+              name="lastName"
+              [(ngModel)]="lastName"
+              required
+              maxlength="100"
+              autocomplete="family-name"
+          /></label>
+        </div>
+        }
+        <label
+          >Adresse email<input
+            name="email"
+            type="email"
+            [(ngModel)]="email"
+            required
+            email
+            maxlength="254"
+            autocomplete="email"
+            placeholder="vous@exemple.fr"
+        /></label>
+        <label
+          >Mot de passe<input
+            name="password"
+            type="password"
+            [(ngModel)]="password"
+            required
+            minlength="8"
+            maxlength="72"
+            [autocomplete]="mode() === 'login' ? 'current-password' : 'new-password'"
+        /></label>
+        @if (mode() === 'inscription') {
+        <p class="help">
+          Entre 8 et 72 octets. Les caractères accentués comptent pour plusieurs
+          octets.
+        </p>
+        } @if (error()) {
+        <p class="error" role="alert">{{ error() }}</p>
+        }
+        <button
+          class="primary full"
+          type="submit"
+          [disabled]="authForm.invalid || busy()"
+        >
+          {{ busy() ? 'Connexion en cours…' : mode() === 'login' ? 'Se
+          connecter' : 'Créer mon compte' }}
+        </button>
       </form>
-      <p class="auth-switch">{{ mode() === 'login' ? 'Première visite ?' : 'Déjà un compte ?' }} <a [routerLink]="mode() === 'login' ? '/inscription' : '/login'">{{ mode() === 'login' ? 'Créer un compte' : 'Se connecter' }}</a></p>
+      <p class="auth-switch">
+        {{ mode() === 'login' ? 'Première visite ?' : 'Déjà un compte ?' }}
+        <a [routerLink]="mode() === 'login' ? '/inscription' : '/login'"
+          >{{ mode() === 'login' ? 'Créer un compte' : 'Se connecter' }}</a
+        >
+      </p>
     </section>
   </div>
-</main><footer>Carnet de courses <span>Un petit carnet pour les courses du quotidien.</span></footer>
+</main>
+<footer>
+  Carnet de courses <span>Un petit carnet pour les courses du quotidien.</span>
+</footer>

@@ -1,19 +1,161 @@
 <a class="skip" href="#main">Aller au contenu</a>
-<header class="header"><a class="brand" routerLink="/listes"><span class="brand-mark" aria-hidden="true">✓</span> Carnet de courses</a>
-<button class="quiet" (click)="logout()" [disabled]="busy()">Déconnexion</button></header><main id="main">
+<header class="header">
+  <a class="brand" routerLink="/listes"
+    ><span class="brand-mark" aria-hidden="true">✓</span> Carnet de courses</a
+  >
+  <button class="quiet" (click)="logout()" [disabled]="busy()">
+    Déconnexion
+  </button>
+</header>
+<main id="main">
   <div class="workspace" [attr.aria-busy]="loading()">
-    <aside><p class="eyebrow">Votre carnet</p><h2>Mes listes</h2><nav aria-label="Listes de courses">@for (list of lists(); track list._id) { <a class="list-link" [class.active]="list._id === selected()" [attr.aria-current]="list._id === selected() ? 'page' : null" [routerLink]="['/listes', list._id]"><span aria-hidden="true">▤</span>{{ list.titre }}<span class="arrow" aria-hidden="true">↗</span></a> } @empty { <p class="muted">Aucune liste pour le moment.</p> }</nav><a class="new-list" routerLink="/nouvelle-liste">+ Nouvelle liste</a><p class="aside-note">Un panier bien préparé commence ici.</p></aside>
+    <aside>
+      <p class="eyebrow">Votre carnet</p>
+      <h2>Mes listes</h2>
+      <nav aria-label="Listes de courses">
+        @for (list of lists(); track list._id) {
+        <a
+          class="list-link"
+          [class.active]="list._id === selected()"
+          [attr.aria-current]="list._id === selected() ? 'page' : null"
+          [routerLink]="['/listes', list._id]"
+          ><span aria-hidden="true">▤</span>{{ list.titre }}<span
+            class="arrow"
+            aria-hidden="true"
+            >↗</span
+          ></a
+        >
+        } @empty {
+        <p class="muted">Aucune liste pour le moment.</p>
+        }
+      </nav>
+      <a class="new-list" routerLink="/nouvelle-liste">+ Nouvelle liste</a>
+      <p class="aside-note">Un panier bien préparé commence ici.</p>
+    </aside>
     <section class="content">
-      @if (error()) { <p class="error" role="alert">{{ error() }}</p> }
+      @if (error()) {
+      <p class="error" role="alert">{{ error() }}</p>
+      }
       <p class="sr-only" aria-live="polite">{{ notice() }}</p>
-      @if (loading()) { <p role="status">Chargement de vos courses…</p> }
-      @else if (list()) {
-        <div class="list-heading"><div><p class="eyebrow">Votre prochain panier</p><h1>{{ list()?.titre }}</h1></div><div class="actions"><a class="quiet" [routerLink]="['/modifier-liste', selected()]">Renommer</a><button class="quiet danger" (click)="remove()" [disabled]="busy()">Supprimer la liste</button></div></div>
-        <div class="progress"><span><b>{{ remaining() }}</b> à acheter</span><span>{{ pieces().length - remaining() }} / {{ pieces().length }} dans le panier</span><progress [value]="pieces().length - remaining()" [max]="pieces().length || 1" aria-label="Produits achetés"></progress></div>
-        <form class="quick-add" (ngSubmit)="addQuick()" #quickForm="ngForm"><label class="sr-only" for="quick-title">Nouveau produit</label><input id="quick-title" name="quickTitle" [(ngModel)]="title" required maxlength="200" placeholder="Qu'est-ce qu'on ajoute ?"><button class="primary" [disabled]="quickForm.invalid || !title.trim() || busy()">+ Ajouter</button></form>
-        <div class="tools"><div class="filters" role="group" aria-label="Afficher les produits"><button (click)="filter = 'all'" [attr.aria-pressed]="filter === 'all'">Tous</button><button (click)="filter = 'remaining'" [attr.aria-pressed]="filter === 'remaining'">À acheter</button><button (click)="filter = 'bought'" [attr.aria-pressed]="filter === 'bought'">Achetés</button></div><label class="search"><span class="sr-only">Rechercher un produit</span><input type="search" [(ngModel)]="search" placeholder="Rechercher…"></label></div>
-        <ul class="products">@for (piece of visiblePieces(); track piece._id) { <li [class.bought]="piece.achetee"><label class="product-check"><input type="checkbox" [checked]="piece.achetee" (change)="toggle(piece)" [disabled]="busy()"><span>{{ piece.titre }}</span></label><div class="product-actions"><a [routerLink]="['/listes', selected(), 'modifier-piece', piece._id]" [attr.aria-label]="'Modifier ' + piece.titre">Modifier</a><button class="quiet danger" (click)="remove(piece)" [disabled]="busy()" [attr.aria-label]="'Supprimer ' + piece.titre">×</button></div></li> } @empty { <li class="empty"><span aria-hidden="true">✳</span><h2>{{ pieces().length ? 'Aucun produit ici' : 'Votre liste attend ses premiers produits' }}</h2><p>{{ pieces().length ? 'Essayez un autre filtre ou une autre recherche.' : 'Ajoutez ce dont vous avez besoin juste au-dessus.' }}</p></li> }</ul>
-      } @else { <div class="empty welcome"><span aria-hidden="true">▤</span><p class="eyebrow">On prépare les courses ?</p><h1>Tout commence<br>par une liste.</h1><p>Sélectionnez une liste ou créez celle de votre prochain panier.</p><a class="primary" routerLink="/nouvelle-liste">Créer une liste</a></div> }
+      @if (loading()) {
+      <p role="status">Chargement de vos courses…</p>
+      } @else if (list()) {
+      <div class="list-heading">
+        <div>
+          <p class="eyebrow">Votre prochain panier</p>
+          <h1>{{ list()?.titre }}</h1>
+        </div>
+        <div class="actions">
+          <a class="quiet" [routerLink]="['/modifier-liste', selected()]"
+            >Renommer</a
+          ><button class="quiet danger" (click)="remove()" [disabled]="busy()">
+            Supprimer la liste
+          </button>
+        </div>
+      </div>
+      <div class="progress">
+        <span><b>{{ remaining() }}</b> à acheter</span
+        ><span
+          >{{ pieces().length - remaining() }} / {{ pieces().length }} dans le
+          panier</span
+        ><progress
+          [value]="pieces().length - remaining()"
+          [max]="pieces().length || 1"
+          aria-label="Produits achetés"
+        ></progress>
+      </div>
+      <form class="quick-add" (ngSubmit)="addQuick()" #quickForm="ngForm">
+        <label class="sr-only" for="quick-title">Nouveau produit</label
+        ><input
+          id="quick-title"
+          name="quickTitle"
+          [(ngModel)]="title"
+          required
+          maxlength="200"
+          placeholder="Qu'est-ce qu'on ajoute ?"
+        /><button
+          class="primary"
+          [disabled]="quickForm.invalid || !title.trim() || busy()"
+        >
+          + Ajouter
+        </button>
+      </form>
+      <div class="tools">
+        <div class="filters" role="group" aria-label="Afficher les produits">
+          <button
+            (click)="filter = 'all'"
+            [attr.aria-pressed]="filter === 'all'"
+          >
+            Tous</button
+          ><button
+            (click)="filter = 'remaining'"
+            [attr.aria-pressed]="filter === 'remaining'"
+          >
+            À acheter</button
+          ><button
+            (click)="filter = 'bought'"
+            [attr.aria-pressed]="filter === 'bought'"
+          >
+            Achetés
+          </button>
+        </div>
+        <label class="search"
+          ><span class="sr-only">Rechercher un produit</span
+          ><input type="search" [(ngModel)]="search" placeholder="Rechercher…"
+        /></label>
+      </div>
+      <ul class="products">
+        @for (piece of visiblePieces(); track piece._id) {
+        <li [class.bought]="piece.achetee">
+          <label class="product-check"
+            ><input
+              type="checkbox"
+              [checked]="piece.achetee"
+              (change)="toggle(piece)"
+              [disabled]="busy()"
+            /><span>{{ piece.titre }}</span></label
+          >
+          <div class="product-actions">
+            <a
+              [routerLink]="['/listes', selected(), 'modifier-piece', piece._id]"
+              [attr.aria-label]="'Modifier ' + piece.titre"
+              >Modifier</a
+            ><button
+              class="quiet danger"
+              (click)="remove(piece)"
+              [disabled]="busy()"
+              [attr.aria-label]="'Supprimer ' + piece.titre"
+            >
+              ×
+            </button>
+          </div>
+        </li>
+        } @empty {
+        <li class="empty">
+          <span aria-hidden="true">✳</span>
+          <h2>
+            {{ pieces().length ? 'Aucun produit ici' : 'Votre liste attend ses
+            premiers produits' }}
+          </h2>
+          <p>
+            {{ pieces().length ? 'Essayez un autre filtre ou une autre
+            recherche.' : 'Ajoutez ce dont vous avez besoin juste au-dessus.' }}
+          </p>
+        </li>
+        }
+      </ul>
+      } @else {
+      <div class="empty welcome">
+        <span aria-hidden="true">▤</span>
+        <p class="eyebrow">On prépare les courses ?</p>
+        <h1>Tout commence<br />par une liste.</h1>
+        <p>Sélectionnez une liste ou créez celle de votre prochain panier.</p>
+        <a class="primary" routerLink="/nouvelle-liste">Créer une liste</a>
+      </div>
+      }
     </section>
   </div>
-</main><footer>Carnet de courses <span>Un petit carnet pour les courses du quotidien.</span></footer>
+</main>
+<footer>
+  Carnet de courses <span>Un petit carnet pour les courses du quotidien.</span>
+</footer>

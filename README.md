@@ -17,7 +17,7 @@ Une application pour préparer ses courses et suivre les produits achetés. Chaq
 
 Le ticket blanc, les titres Barlow Condensed et les onglets rouges rappellent un carnet d’épicerie. Les polices Barlow sont servies localement sous licence OFL, conservée dans `frontend/src/assets/fonts`.
 
-L'inscription demande seulement un email et un mot de passe. Le mot de passe peut être affiché à la demande ; une erreur de connexion reçoit le focus. Les anciens noms et prénoms en base ne sont pas nécessaires au compte.
+L'inscription demande seulement un email et un mot de passe. Le mot de passe peut être affiché à la demande ; une erreur de connexion reçoit le focus. Sur téléphone390px, email, mot de passe et bouton tiennent dans le premier écran. Une session valide ouvre directement les listes ; une déconnexion dans un autre onglet ferme également les vues privées de ce navigateur. Une coupure réseau pendant le renouvellement conserve la session pour réessayer. Les anciens noms et prénoms en base ne sont pas nécessaires au compte.
 
 Les quantités vont de 0,001 à 999, avec trois décimales maximum. Les unités proposées sont pièce, kg, g, L, mL, paquet et bouteille. Les rayons sont Fruits et légumes, Frais, Épicerie, Boulangerie, Maison et Autres. Les anciens produits prennent les valeurs 1 pièce / Autres sans perdre leur titre ni leur état. L'ajout rapide remet le focus dans la saisie pour enchaîner les produits.
 

@@ -348,7 +348,9 @@ test('ticket en magasin : inscription simple, quantités, rayons, tri, navigatio
   ).toBeVisible();
   await expect(page.getByLabel('Organiser le ticket')).toHaveValue('remaining');
   await expect(page.getByLabel('Nouveau produit')).toBeHidden();
-  await expect(page.getByLabel('Ouvrir une liste').locator('option:checked')).toHaveText('Au marché');
+  await expect(
+    page.getByLabel('Ouvrir une liste').locator('option:checked'),
+  ).toHaveText('Au marché');
   const current = page.url();
   const other = await context.newPage();
   await other.goto(current);
@@ -384,4 +386,63 @@ test('ticket en magasin : inscription simple, quantités, rayons, tri, navigatio
   await expect(page.locator('.product-meta').first()).toContainText('6 pièce');
   await expect(page.getByRole('checkbox', { name: /Pommes/ })).toBeVisible();
   await page.emulateMedia({ media: 'screen' });
+});
+
+test('auth compacte, session restaurée et fermeture depuis un autre onglet', async ({
+  page,
+  context,
+}) => {
+  for (const path of ['/login', '/inscription']) {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto(path);
+    const button = page.getByRole('button', {
+      name: path === '/login' ? 'Se connecter' : 'Créer mon compte',
+      exact: true,
+    });
+    await expect(button).toBeVisible();
+    const box = await button.boundingBox();
+    expect(box && box.y + box.height).toBeLessThan(844);
+    for (const width of [1440, 800, 390, 320]) {
+      await page.setViewportSize({ width, height: 844 });
+      expect(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth <= innerWidth,
+        ),
+      ).toBeTruthy();
+    }
+  }
+  await page
+    .getByLabel('Adresse email')
+    .fill('session-tabs-' + Date.now() + '@example.fr');
+  await page.getByLabel('Mot de passe').fill('Passphrase-123');
+  await expect(
+    page.getByRole('button', { name: 'Créer mon compte' }),
+  ).toBeEnabled();
+  await page.getByRole('button', { name: 'Créer mon compte' }).click();
+  await expect(page).toHaveURL(/listes/);
+  const other = await context.newPage();
+  await other.goto('/login');
+  await expect(other).toHaveURL(/listes/);
+  await page.evaluate(() => localStorage.setItem('x-access-token', 'expired'));
+  await page.route('**/api/utilisateurs/moi/access-token', (route) =>
+    route.abort(),
+  );
+  await page.reload();
+  await expect(page.getByRole('alert')).toContainText('Connexion indisponible');
+  expect(
+    await page.evaluate(() => !!localStorage.getItem('x-refresh-token')),
+  ).toBeTruthy();
+  await page.unroute('**/api/utilisateurs/moi/access-token');
+  await page.reload();
+  await expect(page).toHaveURL(/listes/);
+  await expect(page.getByRole('button', { name: 'Déconnexion' })).toBeVisible();
+  await page.getByRole('button', { name: 'Déconnexion' }).click();
+  await expect(other).toHaveURL(/login/);
+  await expect(
+    other.getByRole('button', { name: 'Se connecter', exact: true }),
+  ).toBeVisible();
+  await expect(other.getByRole('button', { name: 'Déconnexion' })).toHaveCount(
+    0,
+  );
+  await other.close();
 });

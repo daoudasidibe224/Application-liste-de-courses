@@ -2,7 +2,7 @@ import { Component, inject, signal, DestroyRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink, NavigationEnd } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Api } from './api';
+import { Api, listArray } from './api';
 @Component({
   selector: 'app-auth',
   imports: [FormsModule, RouterLink],
@@ -20,6 +20,13 @@ export class AuthPage {
   password = '';
   visiblePassword = false;
   constructor() {
+    if (this.api.hasSession())
+      void this.api
+        .request('listes', listArray)
+        .then(() => this.router.navigateByUrl('/listes'))
+        .catch(() => {
+          /* Une session expirée laisse le formulaire disponible. */
+        });
     this.router.events
       .pipe(takeUntilDestroyed(inject(DestroyRef)))
       .subscribe((event) => {

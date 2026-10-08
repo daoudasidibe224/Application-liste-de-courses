@@ -1171,3 +1171,41 @@ select:focus-visible {
 .carnet-auth-heading .brand {
   font-size: 1.8rem;
 }
+
+/* Le formulaire de compte tient dans le premier écran mobile. */
+@media (max-width: 600px) {
+  .auth-layout {
+    margin-top: 18px;
+  }
+  .auth-card.ticket {
+    padding: 22px 24px;
+  }
+  .auth-card .ticket-masthead {
+    padding-bottom: 18px;
+    margin-bottom: 20px;
+  }
+  .auth-card .ticket-masthead h1 {
+    font-size: 2.4rem;
+    line-height: 1;
+  }
+  .auth-card .ticket-masthead > p,
+  .auth-card .ticket-stamp {
+    display: none;
+  }
+  .auth-card .eyebrow {
+    margin-bottom: 8px;
+  }
+  .auth-card h2 {
+    font-size: 1.7rem;
+  }
+  .auth-card .muted {
+    margin: 8px 0 16px;
+  }
+  .auth-card form {
+    gap: 14px;
+  }
+  .auth-card .help {
+    font-size: 0.75rem;
+    margin: 0;
+  }
+}

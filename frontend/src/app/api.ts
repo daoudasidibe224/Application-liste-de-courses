@@ -191,7 +191,8 @@ export class Api {
           creationKey,
         );
       } catch (error) {
-        this.clearSession();
+        if (error instanceof ApiError && [401, 403].includes(error.status))
+          this.clearSession();
         throw error;
       }
     }

@@ -1,3 +1,4 @@
+import { CarnetNavigation } from './carnet-navigation';
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -6,7 +7,7 @@ import { pieceData, ignoreData } from './api';
 import { WorkspaceController } from './workspace-controller';
 @Component({
   selector: 'app-lists',
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule, RouterLink, CarnetNavigation],
   templateUrl: './lists-workspace.html',
 })
 export class ListsWorkspace extends WorkspaceController {
@@ -20,11 +21,18 @@ export class ListsWorkspace extends WorkspaceController {
         `listes/${this.selected()}/pieces`,
         pieceData,
         'POST',
-        { titre: this.title.trim() },
+        {
+          titre: this.title.trim(),
+          quantity: this.quantity,
+          unit: this.unit,
+          category: this.category,
+        },
       );
       if (listId !== this.selected()) return;
       this.pieces.update((items) => [...items, piece]);
       this.title = '';
+      this.quantity = 1;
+      document.getElementById('quick-title')?.focus();
       this.notice.set('Produit ajouté.');
     } catch (error) {
       this.report(error);
@@ -32,7 +40,7 @@ export class ListsWorkspace extends WorkspaceController {
       this.busy.set(false);
     }
   }
-  async toggle(piece: Piece) {
+  async toggle(piece: Piece, event: Event) {
     if (this.busy()) return;
     const listId = this.selected();
     this.busy.set(true);
@@ -54,6 +62,8 @@ export class ListsWorkspace extends WorkspaceController {
           : 'Produit remis dans les courses à faire.',
       );
     } catch (error) {
+      if (event.target instanceof HTMLInputElement)
+        event.target.checked = piece.achetee;
       this.report(error);
     } finally {
       this.busy.set(false);

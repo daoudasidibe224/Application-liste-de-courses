@@ -18,8 +18,14 @@ router.post("/utilisateurs", async (req: ApiRequest, res) => {
     data = credentials(body);
   const user = await Utilisateur.create({
     ...data,
-    nom: text(body.nom, 100),
-    prenom: text(body.prenom, 100),
+    nom:
+      typeof body.nom === "string" && body.nom.trim()
+        ? text(body.nom, 100)
+        : "",
+    prenom:
+      typeof body.prenom === "string" && body.prenom.trim()
+        ? text(body.prenom, 100)
+        : "",
   });
   await sessionResponse(user, res);
 });
@@ -38,7 +44,7 @@ router.get("/utilisateurs/moi/access-token", async (req, res) => {
     sessions: { $elemMatch: { token, expiresAt: { $gt: Date.now() / 1000 } } },
   });
   if (!user) throw unauthorized();
-  const accessToken = access(user);
+  const accessToken = access(user, token);
   res.set("x-access-token", accessToken).json({ accessToken });
 });
 router.post("/utilisateurs/logout", async (req, res) => {

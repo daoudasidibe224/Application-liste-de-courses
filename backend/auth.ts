@@ -9,26 +9,41 @@ export function secret() {
     throw new Error("JWT_SECRET invalide.");
   return process.env.JWT_SECRET;
 }
-export function access(user: User) {
-  return jwt.sign({ _id: user._id.toString() }, secret(), {
-    expiresIn: "15m",
-    algorithm: "HS256",
-  });
+export function access(user: User, session: string) {
+  return jwt.sign(
+    {
+      _id: user._id.toString(),
+      sid: crypto.createHash("sha256").update(session).digest("hex"),
+    },
+    secret(),
+    {
+      expiresIn: "15m",
+      algorithm: "HS256",
+    },
+  );
 }
 export async function sessionResponse(user: User, res: Response) {
   const refresh = crypto.randomBytes(64).toString("hex");
-  const active = user.sessions
-    .filter((session) => session.expiresAt > Date.now() / 1000)
-    .slice(-9);
-  user.sessions.splice(0, user.sessions.length, ...active, {
-    token: refresh,
-    expiresAt: Date.now() / 1000 + 10 * 86400,
-  });
-  await user.save();
-  res.set("x-refresh-token", refresh).set("x-access-token", access(user)).json({
-    _id: user._id,
-    nom: user.nom,
-    prenom: user.prenom,
-    email: user.email,
-  });
+  await Utilisateur.updateOne(
+    { _id: user._id },
+    {
+      $push: {
+        sessions: {
+          $each: [
+            { token: refresh, expiresAt: Date.now() / 1000 + 10 * 86400 },
+          ],
+          $slice: -10,
+        },
+      },
+    },
+  );
+  res
+    .set("x-refresh-token", refresh)
+    .set("x-access-token", access(user, refresh))
+    .json({
+      _id: user._id,
+      nom: user.nom,
+      prenom: user.prenom,
+      email: user.email,
+    });
 }

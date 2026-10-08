@@ -1,33 +1,13 @@
 <a class="skip" href="#main">Aller au contenu</a>
-<header class="header">
-  <a class="brand" routerLink="/listes"
-    ><span class="brand-mark" aria-hidden="true">▥</span> Carnet de courses</a
-  >
-  <button class="quiet" (click)="logout()" [disabled]="busy()">
-    Déconnexion
-  </button>
-</header>
+<app-carnet-nav
+  [lists]="lists()"
+  [selected]="selected()"
+  [busy]="busy()"
+  (logout)="logout()"
+/>
 <main id="main">
   <div class="workspace" [attr.aria-busy]="loading()">
-    <aside>
-      <p class="eyebrow">Votre carnet</p>
-      <h2>Mes listes</h2>
-      <nav aria-label="Listes de courses">
-        @for (list of lists(); track list._id) {
-        <a
-          class="list-link"
-          [class.active]="list._id === selected()"
-          [attr.aria-current]="list._id === selected() ? 'page' : null"
-          [routerLink]="['/listes', list._id]"
-          >{{ list.titre }}<span class="arrow" aria-hidden="true">↗</span></a
-        >
-        } @empty {
-        <p class="muted">Aucune liste pour le moment.</p>
-        }
-      </nav>
-      <a class="new-list" routerLink="/nouvelle-liste">+ Nouvelle liste</a>
-    </aside>
-    <section class="content ticket">
+    <section class="content ticket" [class.store-mode]="storeMode">
       @if (error()) {
       <p class="error" role="alert">{{ error() }}</p>
       }
@@ -48,6 +28,18 @@
             Supprimer la liste
           </button>
         </div>
+      </div>
+      <div class="store-switch">
+        <button
+          class="quiet"
+          (click)="toggleStore()"
+          [attr.aria-pressed]="storeMode"
+        >
+          {{storeMode ? 'Quitter le mode magasin' : 'Mode magasin'}}</button
+        ><span
+          >{{storeMode ? 'Cochez vos achats. Les outils d’édition sont repliés.'
+          : 'Préparez le ticket ou passez en mode magasin.'}}</span
+        >
       </div>
       <div class="progress">
         <span><b>{{ remaining() }}</b> à acheter</span
@@ -71,11 +63,43 @@
           placeholder="Qu'est-ce qu'on ajoute ?"
         /><button
           class="primary"
-          [disabled]="quickForm.invalid || !title.trim() || busy()"
+          [disabled]="quickForm.invalid || !title.trim() || !validDetails() || busy()"
         >
           + Ajouter
         </button>
       </form>
+      <button
+        class="quiet details-toggle"
+        (click)="detailsOpen=!detailsOpen"
+        [attr.aria-expanded]="detailsOpen"
+      >
+        {{detailsOpen ? 'Replier quantité et rayon' : 'Quantité, unité et
+        rayon'}}
+      </button>
+      @if(detailsOpen){
+      <div class="product-details">
+        <label
+          >Quantité<input
+            type="number"
+            [(ngModel)]="quantity"
+            min="0.001"
+            max="999"
+            step="0.001" /></label
+        ><label
+          >Unité<select aria-label="Unité" [(ngModel)]="unit">
+            @for(value of units;track value){
+            <option [value]="value">{{value}}</option>
+            }
+          </select></label
+        ><label
+          >Rayon<select aria-label="Rayon" [(ngModel)]="category">
+            @for(value of categories;track value){
+            <option [value]="value">{{value}}</option>
+            }
+          </select></label
+        >
+      </div>
+      }
       <div class="tools">
         <div class="filters" role="group" aria-label="Afficher les produits">
           <button
@@ -100,46 +124,69 @@
           ><input type="search" [(ngModel)]="search" placeholder="Rechercher…"
         /></label>
       </div>
-      <ul class="products">
-        @for (piece of visiblePieces(); track piece._id) {
-        <li [class.bought]="piece.achetee">
-          <label class="product-check"
-            ><input
-              type="checkbox"
-              [checked]="piece.achetee"
-              (change)="toggle(piece)"
-              [disabled]="busy()"
-            /><span>{{ piece.titre }}</span></label
-          >
-          <div class="product-actions">
-            <a
-              [routerLink]="['/listes', selected(), 'modifier-piece', piece._id]"
-              [attr.aria-label]="'Modifier ' + piece.titre"
-              >Modifier</a
-            ><button
-              class="quiet danger"
-              (click)="remove(piece)"
-              [disabled]="busy()"
-              [attr.aria-label]="'Supprimer ' + piece.titre"
+      <label class="sort-control"
+        >Organiser le ticket<select
+          aria-label="Organiser le ticket"
+          [(ngModel)]="sort"
+          (change)="saveView()"
+        >
+          <option value="category">Par rayon</option>
+          <option value="name">Par nom</option>
+          <option value="remaining">À acheter d’abord</option>
+          <option value="created">Ordre d’ajout</option>
+        </select></label
+      >
+      @for(group of groups();track group.category){
+      <section class="product-group">
+        <h2>{{group.category}} <span>{{group.pieces.length}}</span></h2>
+        <ul class="products">
+          @for (piece of group.pieces; track piece._id) {
+          <li [class.bought]="piece.achetee">
+            <label class="product-check"
+              ><input
+                type="checkbox"
+                [checked]="piece.achetee"
+                (change)="toggle(piece,$event)"
+                [disabled]="busy()"
+              /><span
+                >{{ piece.titre }}<small class="product-meta"
+                  >{{piece.quantity}} {{piece.unit}}
+                  <span class="print-category"
+                    >· {{piece.category}}</span
+                  ></small
+                ></span
+              ></label
             >
-              ×
-            </button>
-          </div>
-        </li>
-        } @empty {
-        <li class="empty">
-          <h2>
-            {{ pieces().length ? 'Aucun produit ici' : 'Votre liste attend ses
-            premiers produits' }}
-          </h2>
-          <p>
-            {{ pieces().length ? 'Essayez un autre filtre ou une autre
-            recherche.' : 'Ajoutez ce dont vous avez besoin juste au-dessus.' }}
-          </p>
-        </li>
-        }
-      </ul>
-      } @else {
+            <div class="product-actions">
+              <a
+                [routerLink]="['/listes', selected(), 'modifier-piece', piece._id]"
+                [attr.aria-label]="'Modifier ' + piece.titre"
+                >Modifier</a
+              ><button
+                class="quiet danger"
+                (click)="remove(piece)"
+                [disabled]="busy()"
+                [attr.aria-label]="'Supprimer ' + piece.titre"
+              >
+                ×
+              </button>
+            </div>
+          </li>
+          }
+        </ul>
+      </section>
+      } @empty {
+      <div class="empty">
+        <h2>
+          {{ pieces().length ? 'Aucun produit ici' : 'Votre liste attend ses
+          premiers produits' }}
+        </h2>
+        <p>
+          {{ pieces().length ? 'Essayez un autre filtre ou une autre recherche.'
+          : 'Ajoutez ce dont vous avez besoin juste au-dessus.' }}
+        </p>
+      </div>
+      } } @else {
       <div class="empty welcome">
         <p class="eyebrow">On prépare les courses ?</p>
         <h1>Tout commence<br />par une liste.</h1>

@@ -1,32 +1,12 @@
 <a class="skip" href="#main">Aller au contenu</a>
-<header class="header">
-  <a class="brand" routerLink="/listes"
-    ><span class="brand-mark" aria-hidden="true">▥</span> Carnet de courses</a
-  >
-  <button class="quiet" (click)="logout()" [disabled]="busy()">
-    Déconnexion
-  </button>
-</header>
+<app-carnet-nav
+  [lists]="lists()"
+  [selected]="selected()"
+  [busy]="busy()"
+  (logout)="logout()"
+/>
 <main id="main">
   <div class="workspace" [attr.aria-busy]="loading()">
-    <aside>
-      <p class="eyebrow">Votre carnet</p>
-      <h2>Mes listes</h2>
-      <nav aria-label="Listes de courses">
-        @for (list of lists(); track list._id) {
-        <a
-          class="list-link"
-          [class.active]="list._id === selected()"
-          [attr.aria-current]="list._id === selected() ? 'page' : null"
-          [routerLink]="['/listes', list._id]"
-          >{{ list.titre }}<span class="arrow" aria-hidden="true">↗</span></a
-        >
-        } @empty {
-        <p class="muted">Aucune liste pour le moment.</p>
-        }
-      </nav>
-      <a class="new-list" routerLink="/nouvelle-liste">+ Nouvelle liste</a>
-    </aside>
     <section class="content ticket">
       @if (error()) {
       <p class="error" role="alert">{{ error() }}</p>
@@ -56,6 +36,36 @@
             maxlength="200"
             placeholder="Ex. Courses de la semaine"
         /></label>
+        @if(mode()==='new-piece'||mode()==='edit-piece'){
+        <div class="product-details">
+          <label
+            >Quantité<input
+              type="number"
+              name="quantity"
+              [(ngModel)]="quantity"
+              required
+              min="0.001"
+              max="999"
+              step="0.001" /></label
+          ><label
+            >Unité<select aria-label="Unité" name="unit" [(ngModel)]="unit">
+              @for(value of units;track value){
+              <option [value]="value">{{value}}</option>
+              }
+            </select></label
+          ><label
+            >Rayon<select
+              aria-label="Rayon"
+              name="category"
+              [(ngModel)]="category"
+            >
+              @for(value of categories;track value){
+              <option [value]="value">{{value}}</option>
+              }
+            </select></label
+          >
+        </div>
+        }
         <div class="actions">
           <a
             class="quiet"
@@ -63,7 +73,7 @@
             >Annuler</a
           ><button
             class="primary"
-            [disabled]="titleForm.invalid || !title.trim() || busy()"
+            [disabled]="titleForm.invalid || !title.trim() || ((mode()==='new-piece'||mode()==='edit-piece')&&!validDetails()) || busy()"
           >
             {{ busy() ? 'Enregistrement…' : 'Enregistrer' }}
           </button>

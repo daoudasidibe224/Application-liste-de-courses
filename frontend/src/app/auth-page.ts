@@ -18,8 +18,7 @@ export class AuthPage {
   error = signal('');
   email = '';
   password = '';
-  firstName = '';
-  lastName = '';
+  visiblePassword = false;
   constructor() {
     this.router.events
       .pipe(takeUntilDestroyed(inject(DestroyRef)))
@@ -36,6 +35,7 @@ export class AuthPage {
   }
   private report(error: unknown) {
     this.error.set(error instanceof Error ? error.message : 'Réessayez.');
+    setTimeout(() => document.getElementById('auth-error')?.focus());
   }
   async authenticate() {
     if (this.busy()) return;
@@ -47,8 +47,6 @@ export class AuthPage {
         {
           email: this.email,
           mdp: this.password,
-          nom: this.lastName,
-          prenom: this.firstName,
         },
       );
       this.password = '';

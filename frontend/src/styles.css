@@ -856,3 +856,318 @@ footer {
     break-inside: avoid;
   }
 }
+
+/* L’index du carnet donne accès aux listes avant le ticket. */
+app-carnet-nav {
+  display: block;
+}
+.carnet-navigation {
+  display: grid;
+  grid-template-columns: 1fr;
+  justify-items: center;
+  gap: 7px;
+  padding: 15px 24px 12px;
+  background: #efefec;
+  border-bottom: 2px solid var(--ink);
+}
+.nav-caption {
+  margin: 0;
+  font-size: 0.66rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.carnet-navigation .brand {
+  font-size: 2.2rem;
+  text-align: center;
+}
+.carnet-index {
+  max-width: 650px;
+  display: flex;
+  justify-content: center;
+  align-items: end;
+  gap: 23px;
+  width: 100%;
+  border-top: 1px dashed var(--ink);
+  padding-top: 11px;
+}
+.carnet-index label {
+  font-size: 0.7rem;
+  display: grid;
+  gap: 4px;
+  max-width: 330px;
+  min-width: 0;
+  flex: 1;
+}
+.carnet-index select {
+  max-width: 100%;
+  height: 40px;
+}
+.carnet-index .new-list {
+  margin: 0;
+  white-space: nowrap;
+  padding: 8px;
+}
+.carnet-index .quiet {
+  white-space: nowrap;
+  min-height: 40px;
+}
+.workspace {
+  display: block !important;
+  max-width: 780px;
+  margin: 26px auto !important;
+}
+.content.ticket {
+  width: 100%;
+  max-width: none;
+  margin: 0 !important;
+}
+.product-details {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.6fr;
+  gap: 12px;
+  padding: 15px 0;
+  border-bottom: 1px dashed var(--line);
+  margin-bottom: 15px;
+}
+.product-details label {
+  display: grid;
+  gap: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.product-details input,
+.product-details select {
+  width: 100%;
+  min-width: 0;
+}
+.sort-control {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.8rem;
+  margin: 15px 0 20px;
+}
+.sort-control select {
+  max-width: 210px;
+}
+.product-group {
+  margin: 0 0 20px;
+}
+.product-group > h2 {
+  font: 600 1.35rem "Barlow Condensed";
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-top: 2px solid var(--ink);
+  padding-top: 13px;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+.product-group > h2 span {
+  font: 400 0.85rem Barlow;
+}
+.product-meta {
+  display: block;
+  font-size: 0.76rem;
+  color: var(--muted);
+  margin-top: 4px;
+  text-decoration: none;
+}
+.print-category {
+  display: none;
+}
+.store-switch {
+  border-bottom: 1px dashed var(--line);
+  padding: 8px 0 12px;
+  margin: 8px 0 12px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 0.76rem;
+}
+.store-switch button {
+  padding: 8px;
+  border: 1px solid var(--ink);
+  font-weight: 600;
+}
+.store-switch button[aria-pressed="true"] {
+  background: var(--ink);
+  color: white;
+}
+.store-switch span {
+  color: var(--muted);
+}
+.store-mode .quick-add,
+.store-mode .details-toggle,
+.store-mode .product-details,
+.store-mode .tools,
+.store-mode .product-actions,
+.store-mode .list-heading .actions {
+  display: none;
+}
+.store-mode .product-check {
+  width: 100%;
+  padding: 8px 0;
+  font-size: 1.1rem;
+  min-height: 60px;
+}
+.store-mode .product-check input {
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+}
+.store-mode .progress {
+  position: sticky;
+  top: 0;
+  background: white;
+  z-index: 2;
+  padding: 10px 0;
+}
+.password-toggle {
+  text-align: left;
+  justify-self: start;
+  font-size: 0.8rem;
+  padding: 0;
+  min-height: 34px;
+}
+select {
+  font: inherit;
+  color: var(--ink);
+  border: 1px solid #99998f;
+  border-radius: 0;
+  background: #fff;
+  padding: 9px;
+  min-height: 42px;
+  min-width: 0;
+}
+select:focus-visible {
+  outline: 3px solid var(--tomato);
+  outline-offset: 3px;
+}
+.auth-card .ticket-masthead h1 {
+  font-size: 3.3rem;
+  max-width: 300px;
+  margin: 0 auto 20px;
+}
+.auth-card .ticket-masthead {
+  padding-bottom: 24px;
+}
+.auth-layout {
+  padding-top: 15px;
+}
+.details-toggle {
+  font-size: 0.75rem;
+  margin-top: 8px;
+  min-height: 36px;
+}
+@media (max-width: 600px) {
+  .carnet-navigation {
+    padding: 11px 16px;
+    gap: 4px;
+  }
+  .carnet-navigation .brand {
+    font-size: 1.75rem;
+  }
+  .carnet-index {
+    gap: 8px;
+    flex-wrap: wrap;
+    padding-top: 8px;
+    align-items: center;
+  }
+  .carnet-index label {
+    flex-basis: 100%;
+    max-width: none;
+    display: grid;
+    grid-template-columns: 80px minmax(0, 1fr);
+    align-items: center;
+    font-size: 0.7rem;
+  }
+  .carnet-index select {
+    height: 38px;
+    min-height: 38px;
+    font-size: 0.85rem;
+  }
+  .carnet-index .new-list,
+  .carnet-index .quiet {
+    font-size: 0.72rem;
+    min-height: 33px;
+    padding: 6px;
+  }
+  .workspace {
+    margin: 18px auto !important;
+  }
+  .content.ticket {
+    padding: 24px 18px;
+  }
+  .product-details {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .product-details label:last-child {
+    grid-column: 1/-1;
+  }
+  .sort-control {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+  .sort-control select {
+    width: 100%;
+    font-size: 0.75rem;
+  }
+  .store-switch span {
+    font-size: 0.7rem;
+  }
+  .store-mode .list-heading h1 {
+    font-size: 2.5rem;
+  }
+  .store-mode .progress {
+    font-size: 0.8rem;
+  }
+  .product-check {
+    min-width: 0;
+  }
+  .product-check > span {
+    overflow-wrap: anywhere;
+  }
+  .auth-card .ticket-masthead h1 {
+    font-size: 2.6rem;
+    max-width: 240px;
+  }
+  .auth-card .ticket-stamp {
+    font-size: 0.8rem;
+  }
+}
+@media print {
+  app-carnet-nav,
+  .store-switch,
+  .sort-control,
+  .details-toggle,
+  .product-details,
+  .tools,
+  .product-actions {
+    display: none !important;
+  }
+  .print-category {
+    display: inline;
+  }
+  .product-group {
+    break-inside: avoid;
+  }
+  .product-meta {
+    color: black;
+  }
+  .store-mode .progress {
+    position: static;
+  }
+}
+
+.carnet-auth-heading {
+  justify-content: center;
+  text-align: center;
+  border-bottom: 1px dashed var(--ink);
+  padding: 14px;
+}
+.carnet-auth-heading .brand {
+  font-size: 1.8rem;
+}

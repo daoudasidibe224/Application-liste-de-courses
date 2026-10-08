@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
+import { units, categories } from "../../contracts.ts";
 const owner = { type: mongoose.Schema.Types.ObjectId, required: true };
 const title = {
   type: String,
@@ -26,6 +27,9 @@ export const Piece = mongoose.model(
     titre: title,
     _listeId: owner,
     achetee: { type: Boolean, default: false },
+    quantity: { type: Number, default: 1, min: 0.001, max: 999 },
+    unit: { type: String, enum: units, default: "pièce" },
+    category: { type: String, enum: categories, default: "Autres" },
     creationKey: { type: String },
   }),
 );
@@ -44,8 +48,8 @@ Piece.schema.index(
   },
 );
 const users = new mongoose.Schema({
-  nom: { type: String, required: true, trim: true, maxlength: 100 },
-  prenom: { type: String, required: true, trim: true, maxlength: 100 },
+  nom: { type: String, default: "", trim: true, maxlength: 100 },
+  prenom: { type: String, default: "", trim: true, maxlength: 100 },
   email: {
     type: String,
     required: true,

@@ -1,3 +1,4 @@
+import { CarnetNavigation } from './carnet-navigation';
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -5,7 +6,7 @@ import { listData, ignoreData } from './api';
 import { WorkspaceController } from './workspace-controller';
 @Component({
   selector: 'app-editor',
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule, RouterLink, CarnetNavigation],
   templateUrl: './title-editor.html',
 })
 export class TitleEditor extends WorkspaceController {
@@ -34,6 +35,13 @@ export class TitleEditor extends WorkspaceController {
           this.mode() === 'new-piece' ? 'POST' : 'PATCH',
           {
             titre: this.title.trim(),
+            ...(['edit-piece', 'new-piece'].includes(this.mode())
+              ? {
+                  quantity: this.quantity,
+                  unit: this.unit,
+                  category: this.category,
+                }
+              : {}),
             version:
               this.mode() === 'edit-list'
                 ? this.list()?.version

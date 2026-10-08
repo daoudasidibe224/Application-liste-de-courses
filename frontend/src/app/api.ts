@@ -1,3 +1,20 @@
+export const units = [
+  'pièce',
+  'kg',
+  'g',
+  'L',
+  'mL',
+  'paquet',
+  'bouteille',
+] as const;
+export const categories = [
+  'Fruits et légumes',
+  'Frais',
+  'Épicerie',
+  'Boulangerie',
+  'Maison',
+  'Autres',
+] as const;
 import { Injectable } from '@angular/core';
 export interface Liste {
   _id: string;
@@ -10,6 +27,9 @@ export interface Piece {
   titre: string;
   version: number;
   achetee: boolean;
+  quantity: number;
+  unit: string;
+  category: string;
 }
 export class ApiError extends Error {
   status: number;
@@ -45,7 +65,24 @@ export const pieceData: Decoder<Piece> = (value) => {
   const item = object(value);
   if (typeof item.achetee !== 'boolean')
     throw new Error('Réponse serveur invalide.');
+  const quantity = item.quantity ?? 1,
+    unit = item.unit ?? 'pièce',
+    category = item.category ?? 'Autres';
+  if (
+    typeof quantity !== 'number' ||
+    !Number.isFinite(quantity) ||
+    quantity <= 0 ||
+    quantity > 999 ||
+    typeof unit !== 'string' ||
+    !units.some((value) => value === unit) ||
+    typeof category !== 'string' ||
+    !categories.some((value) => value === category)
+  )
+    throw new Error('Réponse produit invalide.');
   return {
+    quantity,
+    unit,
+    category,
     _id: field(item._id),
     _listeId: field(item._listeId),
     titre: field(item.titre),
@@ -65,6 +102,16 @@ export const ignoreData: Decoder<void> = () => undefined;
 @Injectable({ providedIn: 'root' })
 export class Api {
   private refresh?: Promise<void>;
+  private async fetch(path: string, options?: RequestInit) {
+    try {
+      return await fetch(path, options);
+    } catch {
+      throw new ApiError(
+        'Connexion indisponible. Votre saisie est conservée. Réessayez.',
+        0,
+      );
+    }
+  }
   hasSession() {
     return !!localStorage.getItem('x-refresh-token');
   }
@@ -73,7 +120,7 @@ export class Api {
       localStorage.removeItem(key);
   }
   async auth(path: string, body: object) {
-    const response = await fetch('/api/' + path, {
+    const response = await this.fetch('/api/' + path, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
@@ -91,7 +138,7 @@ export class Api {
   }
   async logout() {
     try {
-      await fetch('/api/utilisateurs/logout', {
+      await this.fetch('/api/utilisateurs/logout', {
         method: 'POST',
         headers: this.sessionHeaders(),
       });
@@ -106,7 +153,7 @@ export class Api {
     };
   }
   private async refreshToken() {
-    const response = await fetch('/api/utilisateurs/moi/access-token', {
+    const response = await this.fetch('/api/utilisateurs/moi/access-token', {
       headers: this.sessionHeaders(),
     });
     const data = object(await this.read(response));
@@ -120,7 +167,7 @@ export class Api {
     retry = true,
     creationKey = method === 'POST' ? crypto.randomUUID() : '',
   ): Promise<T> {
-    const response = await fetch('/api/' + path, {
+    const response = await this.fetch('/api/' + path, {
       method,
       headers: {
         'Content-Type': 'application/json',

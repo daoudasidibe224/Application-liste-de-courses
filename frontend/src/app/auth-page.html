@@ -1,40 +1,19 @@
 <a class="skip" href="#main">Aller au contenu</a>
-<header class="header">
-  <a class="brand" routerLink="/listes"
-    ><span class="brand-mark" aria-hidden="true">✓</span> Carnet de courses</a
-  >
+<header class="header carnet-auth-heading">
+  <a class="brand" routerLink="/listes">Carnet de courses</a>
 </header>
 <main id="main">
   <div class="auth-layout">
     <section class="auth-card ticket">
       <div class="ticket-masthead">
         <p>Votre carnet du quotidien</p>
-        <h1>Carnet<br />de courses</h1>
-        <span class="ticket-stamp">À garder sous la main</span>
+        <h1>Carnet de courses</h1>
+        <span class="ticket-stamp">Vos listes. Vos courses.</span>
       </div>
       <p class="eyebrow">Votre espace personnel</p>
       <h2>{{ mode() === 'login' ? 'Se connecter' : 'Créer un compte' }}</h2>
       <p class="muted">Préparez vos listes. Cochez vos achats.</p>
       <form (ngSubmit)="authenticate()" #authForm="ngForm">
-        @if (mode() === 'inscription') {
-        <div class="names">
-          <label
-            >Prénom<input
-              name="firstName"
-              [(ngModel)]="firstName"
-              required
-              maxlength="100"
-              autocomplete="given-name" /></label
-          ><label
-            >Nom<input
-              name="lastName"
-              [(ngModel)]="lastName"
-              required
-              maxlength="100"
-              autocomplete="family-name"
-          /></label>
-        </div>
-        }
         <label
           >Adresse email<input
             name="email"
@@ -49,20 +28,31 @@
         <label
           >Mot de passe<input
             name="password"
-            type="password"
+            [type]="visiblePassword ? 'text' : 'password'"
             [(ngModel)]="password"
             required
             minlength="8"
             maxlength="72"
             [autocomplete]="mode() === 'login' ? 'current-password' : 'new-password'"
         /></label>
+        <button
+          type="button"
+          class="password-toggle quiet"
+          (click)="visiblePassword=!visiblePassword"
+          [attr.aria-pressed]="visiblePassword"
+        >
+          {{visiblePassword ? 'Masquer le mot de passe' : 'Afficher le mot de
+          passe'}}
+        </button>
         @if (mode() === 'inscription') {
         <p class="help">
           Entre 8 et 72 octets. Les caractères accentués comptent pour plusieurs
           octets.
         </p>
         } @if (error()) {
-        <p class="error" role="alert">{{ error() }}</p>
+        <p id="auth-error" class="error" role="alert" tabindex="-1">
+          {{ error() }}
+        </p>
         }
         <button
           class="primary full"

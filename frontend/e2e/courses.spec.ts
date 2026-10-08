@@ -6,8 +6,6 @@ test('parcours réel : compte, listes, produits, filtres et déconnexion', async
   page.on('pageerror', (error) => errors.push(error.message));
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/inscription');
-  await page.getByLabel('Prénom', { exact: true }).fill('Camille');
-  await page.getByLabel('Nom', { exact: true }).fill('Test');
   await page
     .getByLabel('Adresse email')
     .fill(`camille-${Date.now()}@example.fr`);
@@ -129,6 +127,15 @@ test('erreur de connexion visible et accès aux listes protégé', async ({
   await expect(page.getByRole('alert')).toHaveText(
     'Email ou mot de passe invalide.',
   );
+  await expect(page.getByRole('alert')).toBeFocused();
+  for (const width of [1440, 800, 390, 320]) {
+    await page.setViewportSize({ width, height: 900 });
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBeTruthy();
+  }
   await expect(
     page.getByRole('button', { name: 'Se connecter', exact: true }),
   ).toBeEnabled();
@@ -137,17 +144,16 @@ test('erreur de connexion visible et accès aux listes protégé', async ({
 test('clavier et persistance à 320 pixels', async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 900 });
   await page.goto('/inscription');
-  await page.getByLabel('Prénom', { exact: true }).focus();
-  await page.keyboard.type('Clavier');
-  await page.keyboard.press('Tab');
-  await page.keyboard.type('Test');
-  await page.keyboard.press('Tab');
+  await page.getByLabel('Adresse email').focus();
   await page.keyboard.type(`keyboard-${Date.now()}@example.fr`);
   await page.keyboard.press('Tab');
   await page.keyboard.type('Passphrase-123');
   await expect(
     page.getByRole('button', { name: 'Créer mon compte' }),
   ).toBeEnabled();
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('Enter');
+  await expect(page.getByLabel('Mot de passe')).toHaveAttribute('type', 'text');
   await page.keyboard.press('Tab');
   await page.keyboard.press('Enter');
   await expect(
@@ -210,8 +216,6 @@ test('doubles actions, deux onglets, conflit explicite, erreur et annulation', a
   context,
 }) => {
   await page.goto('/inscription');
-  await page.getByLabel('Prénom', { exact: true }).fill('Lou');
-  await page.getByLabel('Nom', { exact: true }).fill('Test');
   await page.getByLabel('Adresse email').fill(`tabs-${Date.now()}@example.fr`);
   await page.getByLabel('Mot de passe').fill('Passphrase-123');
   await page.getByRole('button', { name: 'Créer mon compte' }).click();
@@ -277,4 +281,107 @@ test('doubles actions, deux onglets, conflit explicite, erreur et annulation', a
   await expect(page.getByRole('checkbox', { name: 'Pommes' })).toBeVisible();
   await page.emulateMedia({ media: 'screen' });
   await other.close();
+});
+
+test('ticket en magasin : inscription simple, quantités, rayons, tri, navigation et préférences persistées', async ({
+  page,
+  context,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/inscription');
+  await expect(page.locator('form input')).toHaveCount(2);
+  await page.getByLabel('Adresse email').fill(`shop-${Date.now()}@example.fr`);
+  await page.getByLabel('Mot de passe').fill('Passphrase-123');
+  await page.getByRole('button', { name: 'Afficher le mot de passe' }).click();
+  await expect(page.getByLabel('Mot de passe')).toHaveAttribute('type', 'text');
+  await page.getByRole('button', { name: 'Masquer le mot de passe' }).click();
+  await page.getByRole('button', { name: 'Créer mon compte' }).click();
+  await page
+    .getByRole('link', { name: 'Créer une liste', exact: true })
+    .click();
+  await page.getByLabel('Nom de la liste').fill('Au marché');
+  await page.getByRole('button', { name: 'Enregistrer' }).click();
+  await expect(page.getByRole('heading', { name: 'Au marché' })).toBeVisible();
+  await page
+    .getByRole('button', { name: 'Quantité, unité et rayon', exact: true })
+    .click();
+  await page.getByLabel('Quantité', { exact: true }).fill('1.25');
+  await page.getByLabel('Unité', { exact: true }).selectOption('kg');
+  await page
+    .getByLabel('Rayon', { exact: true })
+    .selectOption('Fruits et légumes');
+  await page.getByLabel('Nouveau produit').fill('Pommes');
+  await page.getByRole('button', { name: '+ Ajouter' }).click();
+  await expect(page.locator('.product-meta').first()).toContainText('1.25 kg');
+  await expect(page.getByLabel('Nouveau produit')).toBeFocused();
+  await page.getByLabel('Rayon', { exact: true }).selectOption('Frais');
+  await page.getByLabel('Unité', { exact: true }).selectOption('pièce');
+  await page.getByLabel('Quantité', { exact: true }).fill('6');
+  await page.getByLabel('Nouveau produit').fill('Œufs');
+  await page.getByRole('button', { name: '+ Ajouter' }).click();
+  await expect(
+    page.getByRole('heading', { name: 'Frais 1', exact: true }),
+  ).toBeVisible();
+  await page.getByRole('button', { name: 'Replier quantité et rayon' }).click();
+  await page
+    .getByRole('link', { name: 'Modifier Pommes', exact: true })
+    .click();
+  await expect(page.getByLabel('Quantité', { exact: true })).toHaveValue(
+    '1.25',
+  );
+  await page.getByLabel('Quantité', { exact: true }).fill('2');
+  await page.getByRole('button', { name: 'Enregistrer' }).click();
+  await expect(page.locator('.product-meta').first()).toContainText('2 kg');
+  await page.reload();
+  await expect(page.locator('.product-meta').first()).toContainText('2 kg');
+  await page.getByRole('button', { name: 'Mode magasin', exact: true }).click();
+  await expect(
+    page.getByRole('link', { name: 'Modifier Pommes', exact: true }),
+  ).toBeHidden();
+  await page.getByRole('checkbox', { name: /Pommes/ }).check();
+  await expect(page.getByRole('checkbox', { name: /Pommes/ })).toBeChecked();
+  await page.getByLabel('Organiser le ticket').selectOption('remaining');
+  await expect(page.locator('.products li').first()).toContainText('Œufs');
+  await page.reload();
+  await expect(
+    page.getByRole('button', { name: 'Quitter le mode magasin' }),
+  ).toBeVisible();
+  await expect(page.getByLabel('Organiser le ticket')).toHaveValue('remaining');
+  await expect(page.getByLabel('Nouveau produit')).toBeHidden();
+  await expect(page.getByLabel('Ouvrir une liste').locator('option:checked')).toHaveText('Au marché');
+  const current = page.url();
+  const other = await context.newPage();
+  await other.goto(current);
+  await expect(other.getByRole('checkbox', { name: /Pommes/ })).toBeChecked();
+  await other.close();
+  await page
+    .getByRole('link', { name: '+ Nouvelle liste', exact: true })
+    .click();
+  await page.getByLabel('Nom de la liste').fill('À la maison');
+  await page.getByRole('button', { name: 'Enregistrer' }).click();
+  await expect(
+    page.getByRole('heading', { name: 'À la maison' }),
+  ).toBeVisible();
+  const options = await page
+    .getByRole('combobox', { name: 'Ouvrir une liste', exact: true })
+    .locator('option')
+    .allTextContents();
+  expect(options).toContain('Au marché');
+  await page
+    .getByRole('combobox', { name: 'Ouvrir une liste', exact: true })
+    .selectOption({ label: 'Au marché' });
+  await expect(page.getByRole('heading', { name: 'Au marché' })).toBeVisible();
+  for (const width of [1440, 800, 390, 320]) {
+    await page.setViewportSize({ width, height: 900 });
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBeTruthy();
+  }
+  await page.emulateMedia({ media: 'print' });
+  await expect(page.locator('.carnet-navigation')).toBeHidden();
+  await expect(page.locator('.product-meta').first()).toContainText('6 pièce');
+  await expect(page.getByRole('checkbox', { name: /Pommes/ })).toBeVisible();
+  await page.emulateMedia({ media: 'screen' });
 });

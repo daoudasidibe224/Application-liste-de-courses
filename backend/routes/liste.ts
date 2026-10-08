@@ -1,13 +1,14 @@
 import { Router, type Response } from "express";
-import { randomUUID } from "node:crypto";
+import { randomUUID, createHash } from "node:crypto";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
-import { Liste, Piece } from "../db/models/index.ts";
+import { Liste, Piece, Utilisateur } from "../db/models/index.ts";
 import { secret } from "../auth.ts";
 import {
   record,
   text,
   revision,
+  productDetails,
   HttpError,
   type ApiRequest,
 } from "../contracts.ts";
@@ -23,7 +24,7 @@ function creationKey(req: ApiRequest) {
   return key;
 }
 const missing = () => new HttpError("Liste ou produit introuvable.", 404);
-router.use((req, res, next) => {
+router.use(async (req, res, next) => {
   try {
     const token = req.get("x-access-token");
     if (!token) throw new Error();
@@ -32,6 +33,17 @@ router.use((req, res, next) => {
       typeof payload === "string" ||
       typeof payload._id !== "string" ||
       !mongoose.isObjectIdOrHexString(payload._id)
+    )
+      throw new Error();
+    if (typeof payload.sid !== "string") throw new Error();
+    const user = await Utilisateur.findById(payload._id);
+    if (
+      !user?.sessions.some(
+        (session) =>
+          session.expiresAt > Date.now() / 1000 &&
+          createHash("sha256").update(session.token).digest("hex") ===
+            payload.sid,
+      )
     )
       throw new Error();
     res.locals.userId = payload._id;
@@ -123,18 +135,34 @@ router.delete("/:id", async (req: ApiRequest, res) => {
 });
 router.get("/:id/pieces", async (req: ApiRequest, res) => {
   await owned(req, res);
-  res.json(await Piece.find({ _listeId: req.params.id }));
+  res.json(await Piece.find({ _listeId: req.params.id }).sort({ _id: 1 }));
 });
 router.post("/:id/pieces", async (req: ApiRequest, res) => {
   await owned(req, res);
-  const titre = text(record(req.body).titre),
+  const body = record(req.body),
+    titre = text(body.titre),
+    details = productDetails(body, true),
     key = creationKey(req);
   const piece = await Piece.findOneAndUpdate(
     { _listeId: req.params.id, creationKey: key },
-    { $setOnInsert: { titre, _listeId: req.params.id, creationKey: key } },
+    {
+      $setOnInsert: {
+        titre,
+        ...details,
+        _listeId: req.params.id,
+        creationKey: key,
+      },
+    },
     { upsert: true, returnDocument: "after", runValidators: true },
   );
-  if (!piece || piece.titre !== titre) throw conflict();
+  if (
+    !piece ||
+    piece.titre !== titre ||
+    piece.quantity !== details.quantity ||
+    piece.unit !== details.unit ||
+    piece.category !== details.category
+  )
+    throw conflict();
   if (!(await Liste.exists({ _id: req.params.id, deleted: { $ne: true } }))) {
     await piece.deleteOne();
     throw missing();
@@ -144,7 +172,13 @@ router.post("/:id/pieces", async (req: ApiRequest, res) => {
 router.patch("/:id/pieces/:pieceId", async (req: ApiRequest, res) => {
   await owned(req, res);
   const body = record(req.body),
-    updates: { titre?: string; achetee?: boolean } = {};
+    updates: {
+      titre?: string;
+      achetee?: boolean;
+      quantity?: number;
+      unit?: string;
+      category?: string;
+    } = productDetails(body);
   if (Object.hasOwn(body, "titre")) updates.titre = text(body.titre);
   if (Object.hasOwn(body, "achetee")) {
     if (typeof body.achetee !== "boolean")

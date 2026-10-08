@@ -1,7 +1,7 @@
 import { Directive, DestroyRef, inject, signal } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Api, Liste, Piece } from './api';
+import { Api, ApiError, Liste, Piece } from './api';
 import { listArray, pieceArray } from './api';
 @Directive()
 export abstract class WorkspaceController {
@@ -44,7 +44,8 @@ export abstract class WorkspaceController {
           (this.filter === 'remaining' ? !piece.achetee : piece.achetee)),
     );
   }
-  private async load() {
+  private async load(preserveDraft = false) {
+    const draft = this.title;
     const version = ++this.loadVersion;
     const segments = this.router.url.split('?')[0].split('/').filter(Boolean);
     this.error.set('');
@@ -93,6 +94,7 @@ export abstract class WorkspaceController {
       if (this.mode() === 'edit-piece')
         this.title =
           pieces.find((piece) => piece._id === this.pieceId)?.titre || '';
+      if (preserveDraft) this.title = draft;
     } catch (error) {
       if (version === this.loadVersion) this.report(error);
     } finally {
@@ -100,6 +102,10 @@ export abstract class WorkspaceController {
     }
   }
   protected report(error: unknown) {
+    if (error instanceof ApiError && error.status === 409) {
+      const message = error.message;
+      void this.load(true).then(() => this.error.set(message));
+    }
     this.error.set(
       error instanceof Error
         ? error.message

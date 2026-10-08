@@ -12,6 +12,7 @@ import { WorkspaceController } from './workspace-controller';
 export class ListsWorkspace extends WorkspaceController {
   async addQuick() {
     if (this.busy() || !this.title.trim()) return;
+    const listId = this.selected();
     this.busy.set(true);
     this.error.set('');
     try {
@@ -21,6 +22,7 @@ export class ListsWorkspace extends WorkspaceController {
         'POST',
         { titre: this.title.trim() },
       );
+      if (listId !== this.selected()) return;
       this.pieces.update((items) => [...items, piece]);
       this.title = '';
       this.notice.set('Produit ajouté.');
@@ -32,6 +34,7 @@ export class ListsWorkspace extends WorkspaceController {
   }
   async toggle(piece: Piece) {
     if (this.busy()) return;
+    const listId = this.selected();
     this.busy.set(true);
     this.error.set('');
     try {
@@ -39,8 +42,9 @@ export class ListsWorkspace extends WorkspaceController {
         `listes/${this.selected()}/pieces/${piece._id}`,
         pieceData,
         'PATCH',
-        { achetee: !piece.achetee },
+        { achetee: !piece.achetee, version: piece.version },
       );
+      if (listId !== this.selected()) return;
       this.pieces.update((items) =>
         items.map((item) => (item._id === updated._id ? updated : item)),
       );
@@ -55,6 +59,9 @@ export class ListsWorkspace extends WorkspaceController {
       this.busy.set(false);
     }
   }
+  print() {
+    window.print();
+  }
   async remove(piece?: Piece) {
     if (
       this.busy() ||
@@ -65,6 +72,7 @@ export class ListsWorkspace extends WorkspaceController {
       )
     )
       return;
+    const listId = this.selected();
     this.busy.set(true);
     this.error.set('');
     try {
@@ -72,8 +80,11 @@ export class ListsWorkspace extends WorkspaceController {
         `listes/${this.selected()}` + (piece ? '/pieces/' + piece._id : ''),
         ignoreData,
         'DELETE',
+        { version: piece ? piece.version : this.list()?.version },
       );
+      if (listId !== this.selected()) return;
       if (piece) {
+        if (listId !== this.selected()) return;
         this.pieces.update((items) =>
           items.filter((item) => item._id !== piece._id),
         );

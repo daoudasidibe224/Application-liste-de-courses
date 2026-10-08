@@ -25,13 +25,10 @@ export async function sessionResponse(user: User, res: Response) {
     expiresAt: Date.now() / 1000 + 10 * 86400,
   });
   await user.save();
-  res
-    .set("x-refresh-token", refresh)
-    .set("x-access-token", access(user))
-    .json({
-      _id: user._id,
-      nom: user.nom,
-      prenom: user.prenom,
-      email: user.email,
-    });
+  res.set("x-refresh-token", refresh).set("x-access-token", access(user)).json({
+    _id: user._id,
+    nom: user.nom,
+    prenom: user.prenom,
+    email: user.email,
+  });
 }

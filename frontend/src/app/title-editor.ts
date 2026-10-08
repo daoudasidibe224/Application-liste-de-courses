@@ -11,6 +11,8 @@ import { WorkspaceController } from './workspace-controller';
 export class TitleEditor extends WorkspaceController {
   async saveTitle() {
     if (this.busy() || !this.title.trim()) return;
+    const route = this.router.url;
+    const listId = this.selected();
     this.busy.set(true);
     this.error.set('');
     try {
@@ -18,7 +20,8 @@ export class TitleEditor extends WorkspaceController {
         const list = await this.api.request('listes', listData, 'POST', {
           titre: this.title.trim(),
         });
-        await this.router.navigateByUrl('/listes/' + list._id);
+        if (route === this.router.url)
+          await this.router.navigateByUrl('/listes/' + list._id);
       } else {
         const path =
           this.mode() === 'edit-list'
@@ -29,9 +32,17 @@ export class TitleEditor extends WorkspaceController {
           path,
           ignoreData,
           this.mode() === 'new-piece' ? 'POST' : 'PATCH',
-          { titre: this.title.trim() },
+          {
+            titre: this.title.trim(),
+            version:
+              this.mode() === 'edit-list'
+                ? this.list()?.version
+                : this.pieces().find((piece) => piece._id === this.pieceId)
+                    ?.version,
+          },
         );
-        await this.router.navigateByUrl('/listes/' + this.selected());
+        if (route === this.router.url)
+          await this.router.navigateByUrl('/listes/' + listId);
       }
     } catch (error) {
       this.report(error);

@@ -21,7 +21,7 @@ app.use((req, res, next) => {
     );
     res.set(
       "Access-Control-Allow-Headers",
-      "Content-Type, x-access-token, x-refresh-token, _id",
+      "Content-Type, x-access-token, x-refresh-token, _id, Idempotency-Key",
     );
     res.set("Access-Control-Expose-Headers", "x-access-token, x-refresh-token");
   }
@@ -63,17 +63,15 @@ const errors: ErrorRequestHandler = (error: unknown, _req, res, _next) => {
             typeof error.status === "number"
           ? error.status
           : 500;
-  res
-    .status(status)
-    .json({
-      message: duplicate
-        ? "Cette adresse email est déjà utilisée."
-        : status === 400
-          ? "Vérifiez les informations saisies."
-          : error instanceof HttpError
-            ? error.message
-            : "Une erreur est survenue. Réessayez.",
-    });
+  res.status(status).json({
+    message: duplicate
+      ? "Cette adresse email est déjà utilisée."
+      : status === 400
+        ? "Vérifiez les informations saisies."
+        : error instanceof HttpError
+          ? error.message
+          : "Une erreur est survenue. Réessayez.",
+  });
 };
 app.use(errors);
 export default app;

@@ -31,3 +31,9 @@ export class HttpError extends Error {
     this.status = status;
   }
 }
+
+export function revision(value: unknown): number {
+  if (typeof value !== "number" || !Number.isSafeInteger(value) || value < 0)
+    throw new TypeError("Version invalide");
+  return value;
+}

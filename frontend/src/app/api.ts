@@ -2,12 +2,26 @@ import { Injectable } from '@angular/core';
 export interface Liste {
   _id: string;
   titre: string;
+  version: number;
 }
 export interface Piece {
   _id: string;
   _listeId: string;
   titre: string;
+  version: number;
   achetee: boolean;
+}
+export class ApiError extends Error {
+  status: number;
+  constructor(message: string, status: number) {
+    super(message);
+    this.status = status;
+  }
+}
+function version(value: unknown): number {
+  if (typeof value !== 'number' || !Number.isSafeInteger(value) || value < 0)
+    throw new Error('Réponse serveur invalide.');
+  return value;
 }
 type Decoder<T> = (value: unknown) => T;
 function object(value: unknown): Record<string, unknown> {
@@ -21,7 +35,11 @@ function field(value: unknown): string {
 }
 export const listData: Decoder<Liste> = (value) => {
   const item = object(value);
-  return { _id: field(item._id), titre: field(item.titre) };
+  return {
+    _id: field(item._id),
+    titre: field(item.titre),
+    version: version(item.__v),
+  };
 };
 export const pieceData: Decoder<Piece> = (value) => {
   const item = object(value);
@@ -31,6 +49,7 @@ export const pieceData: Decoder<Piece> = (value) => {
     _id: field(item._id),
     _listeId: field(item._listeId),
     titre: field(item.titre),
+    version: version(item.__v),
     achetee: item.achetee,
   };
 };
@@ -99,12 +118,14 @@ export class Api {
     method = 'GET',
     body?: object,
     retry = true,
+    creationKey = method === 'POST' ? crypto.randomUUID() : '',
   ): Promise<T> {
     const response = await fetch('/api/' + path, {
       method,
       headers: {
         'Content-Type': 'application/json',
         'x-access-token': localStorage.getItem('x-access-token') || '',
+        ...(creationKey ? { 'Idempotency-Key': creationKey } : {}),
       },
       ...(body ? { body: JSON.stringify(body) } : {}),
     });
@@ -114,7 +135,14 @@ export class Api {
           this.refresh = undefined;
         });
         await this.refresh;
-        return await this.request(path, decode, method, body, false);
+        return await this.request(
+          path,
+          decode,
+          method,
+          body,
+          false,
+          creationKey,
+        );
       } catch (error) {
         this.clearSession();
         throw error;
@@ -127,10 +155,11 @@ export class Api {
     const data: unknown = await response.json().catch(() => ({}));
     if (!response.ok) {
       const body = object(data);
-      throw new Error(
+      throw new ApiError(
         typeof body.message === 'string'
           ? body.message
           : 'Le serveur ne répond pas. Réessayez.',
+        response.status,
       );
     }
     return data;

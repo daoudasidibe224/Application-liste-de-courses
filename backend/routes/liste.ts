@@ -1,10 +1,27 @@
 import { Router, type Response } from "express";
+import { randomUUID } from "node:crypto";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 import { Liste, Piece } from "../db/models/index.ts";
 import { secret } from "../auth.ts";
-import { record, text, HttpError, type ApiRequest } from "../contracts.ts";
+import {
+  record,
+  text,
+  revision,
+  HttpError,
+  type ApiRequest,
+} from "../contracts.ts";
 const router = Router();
+const conflict = () =>
+  new HttpError(
+    "Cette donnée a changé dans un autre onglet. Vérifiez la version actualisée avant de réessayer.",
+    409,
+  );
+function creationKey(req: ApiRequest) {
+  const key = req.get("Idempotency-Key") || randomUUID();
+  if (!/^[0-9a-f-]{36}$/i.test(key)) throw new TypeError("Clé invalide");
+  return key;
+}
 const missing = () => new HttpError("Liste ou produit introuvable.", 404);
 router.use((req, res, next) => {
   try {
@@ -42,33 +59,66 @@ async function owned(req: ApiRequest, res: Response) {
   const list = await Liste.findOne({
     _id: req.params.id,
     _idUtilisateur: userId(res),
+    deleted: { $ne: true },
   });
   if (!list) throw missing();
   return list;
 }
 router.get("/", async (_req, res) =>
-  res.json(await Liste.find({ _idUtilisateur: userId(res) })),
+  res.json(
+    await Liste.find({ _idUtilisateur: userId(res), deleted: { $ne: true } }),
+  ),
 );
-router.post("/", async (req: ApiRequest, res) =>
-  res
-    .status(201)
-    .json(
-      await Liste.create({
-        titre: text(record(req.body).titre),
+router.post("/", async (req: ApiRequest, res) => {
+  const titre = text(record(req.body).titre),
+    key = creationKey(req);
+  const list = await Liste.findOneAndUpdate(
+    { _idUtilisateur: userId(res), creationKey: key },
+    {
+      $setOnInsert: {
+        titre,
         _idUtilisateur: userId(res),
-      }),
-    ),
-);
+        creationKey: key,
+        deleted: false,
+      },
+    },
+    { upsert: true, returnDocument: "after", runValidators: true },
+  );
+  if (!list || list.deleted || list.titre !== titre) throw conflict();
+  res.status(201).json(list);
+});
 router.patch("/:id", async (req: ApiRequest, res) => {
-  const list = await owned(req, res);
-  list.titre = text(record(req.body).titre);
-  await list.save();
+  await owned(req, res);
+  const body = record(req.body),
+    expected = revision(body.version);
+  const list = await Liste.findOneAndUpdate(
+    {
+      _id: req.params.id,
+      _idUtilisateur: userId(res),
+      deleted: { $ne: true },
+      __v: expected,
+    },
+    { $set: { titre: text(body.titre) }, $inc: { __v: 1 } },
+    { returnDocument: "after", runValidators: true },
+  );
+  if (!list) throw conflict();
   res.json(list);
 });
 router.delete("/:id", async (req: ApiRequest, res) => {
-  const list = await owned(req, res);
+  await owned(req, res);
+  const expected = revision(record(req.body).version);
+  const list = await Liste.findOneAndUpdate(
+    {
+      _id: req.params.id,
+      _idUtilisateur: userId(res),
+      deleted: { $ne: true },
+      __v: expected,
+    },
+    { $set: { deleted: true }, $inc: { __v: 1 } },
+    { returnDocument: "after" },
+  );
+  if (!list) throw conflict();
   await Piece.deleteMany({ _listeId: list._id });
-  await list.deleteOne();
   res.json(list);
 });
 router.get("/:id/pieces", async (req: ApiRequest, res) => {
@@ -77,14 +127,19 @@ router.get("/:id/pieces", async (req: ApiRequest, res) => {
 });
 router.post("/:id/pieces", async (req: ApiRequest, res) => {
   await owned(req, res);
-  res
-    .status(201)
-    .json(
-      await Piece.create({
-        titre: text(record(req.body).titre),
-        _listeId: req.params.id,
-      }),
-    );
+  const titre = text(record(req.body).titre),
+    key = creationKey(req);
+  const piece = await Piece.findOneAndUpdate(
+    { _listeId: req.params.id, creationKey: key },
+    { $setOnInsert: { titre, _listeId: req.params.id, creationKey: key } },
+    { upsert: true, returnDocument: "after", runValidators: true },
+  );
+  if (!piece || piece.titre !== titre) throw conflict();
+  if (!(await Liste.exists({ _id: req.params.id, deleted: { $ne: true } }))) {
+    await piece.deleteOne();
+    throw missing();
+  }
+  res.status(201).json(piece);
 });
 router.patch("/:id/pieces/:pieceId", async (req: ApiRequest, res) => {
   await owned(req, res);
@@ -98,11 +153,21 @@ router.patch("/:id/pieces/:pieceId", async (req: ApiRequest, res) => {
   }
   if (!Object.keys(updates).length) throw new TypeError("Modification vide");
   const piece = await Piece.findOneAndUpdate(
-    { _id: req.params.pieceId, _listeId: req.params.id },
-    { $set: updates },
+    {
+      _id: req.params.pieceId,
+      _listeId: req.params.id,
+      __v: revision(body.version),
+    },
+    { $set: updates, $inc: { __v: 1 } },
     { returnDocument: "after", runValidators: true },
   );
-  if (!piece) throw missing();
+  if (!piece) {
+    if (
+      await Piece.exists({ _id: req.params.pieceId, _listeId: req.params.id })
+    )
+      throw conflict();
+    throw missing();
+  }
   res.json(piece);
 });
 router.delete("/:id/pieces/:pieceId", async (req: ApiRequest, res) => {
@@ -110,8 +175,15 @@ router.delete("/:id/pieces/:pieceId", async (req: ApiRequest, res) => {
   const piece = await Piece.findOneAndDelete({
     _id: req.params.pieceId,
     _listeId: req.params.id,
+    __v: revision(record(req.body).version),
   });
-  if (!piece) throw missing();
+  if (!piece) {
+    if (
+      await Piece.exists({ _id: req.params.pieceId, _listeId: req.params.id })
+    )
+      throw conflict();
+    throw missing();
+  }
   res.json(piece);
 });
 export default router;

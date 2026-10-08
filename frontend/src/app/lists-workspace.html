@@ -1,7 +1,7 @@
 <a class="skip" href="#main">Aller au contenu</a>
 <header class="header">
   <a class="brand" routerLink="/listes"
-    ><span class="brand-mark" aria-hidden="true">✓</span> Carnet de courses</a
+    ><span class="brand-mark" aria-hidden="true">▥</span> Carnet de courses</a
   >
   <button class="quiet" (click)="logout()" [disabled]="busy()">
     Déconnexion
@@ -19,20 +19,15 @@
           [class.active]="list._id === selected()"
           [attr.aria-current]="list._id === selected() ? 'page' : null"
           [routerLink]="['/listes', list._id]"
-          ><span aria-hidden="true">▤</span>{{ list.titre }}<span
-            class="arrow"
-            aria-hidden="true"
-            >↗</span
-          ></a
+          >{{ list.titre }}<span class="arrow" aria-hidden="true">↗</span></a
         >
         } @empty {
         <p class="muted">Aucune liste pour le moment.</p>
         }
       </nav>
       <a class="new-list" routerLink="/nouvelle-liste">+ Nouvelle liste</a>
-      <p class="aside-note">Un panier bien préparé commence ici.</p>
     </aside>
-    <section class="content">
+    <section class="content ticket">
       @if (error()) {
       <p class="error" role="alert">{{ error() }}</p>
       }
@@ -42,10 +37,11 @@
       } @else if (list()) {
       <div class="list-heading">
         <div>
-          <p class="eyebrow">Votre prochain panier</p>
+          <p class="eyebrow">Votre ticket de courses</p>
           <h1>{{ list()?.titre }}</h1>
         </div>
         <div class="actions">
+          <button class="quiet" (click)="print()">Imprimer le ticket</button>
           <a class="quiet" [routerLink]="['/modifier-liste', selected()]"
             >Renommer</a
           ><button class="quiet danger" (click)="remove()" [disabled]="busy()">
@@ -132,7 +128,6 @@
         </li>
         } @empty {
         <li class="empty">
-          <span aria-hidden="true">✳</span>
           <h2>
             {{ pieces().length ? 'Aucun produit ici' : 'Votre liste attend ses
             premiers produits' }}
@@ -146,13 +141,16 @@
       </ul>
       } @else {
       <div class="empty welcome">
-        <span aria-hidden="true">▤</span>
         <p class="eyebrow">On prépare les courses ?</p>
         <h1>Tout commence<br />par une liste.</h1>
         <p>Sélectionnez une liste ou créez celle de votre prochain panier.</p>
         <a class="primary" routerLink="/nouvelle-liste">Créer une liste</a>
       </div>
       }
+      <div class="receipt-end" aria-hidden="true">
+        <span></span>
+        <p>Moins d’oublis, plus de place dans le panier.</p>
+      </div>
     </section>
   </div>
 </main>

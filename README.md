@@ -8,7 +8,10 @@ Une application pour préparer ses courses et suivre les produits achetés. Chaq
 - Créer, renommer et supprimer ses listes.
 - Ajouter rapidement un produit, modifier son nom et le supprimer.
 - Cocher les produits achetés et suivre l'avancement du panier.
+- Imprimer un ticket de courses sans les menus et les boutons.
 - Filtrer les produits à acheter ou déjà achetés et chercher un produit par son nom.
+
+Le ticket blanc, les titres Barlow Condensed et les onglets rouges rappellent un carnet d’épicerie. Les polices Barlow sont servies localement sous licence OFL, conservée dans `frontend/src/assets/fonts`.
 
 L'interface s'adapte au téléphone et au bureau. Les formulaires ont des libellés, les actions restent accessibles au clavier et les erreurs apparaissent près du contenu concerné. La suppression d'une liste ou d'un produit demande confirmation.
 
@@ -50,12 +53,12 @@ Ouvrir [http://localhost:4200](http://localhost:4200). Le client utilise `/api`,
 
 ## Configuration
 
-| Variable de l'API | Usage |
-| --- | --- |
-| `MONGODB_URI` | Adresse MongoDB, obligatoire |
-| `JWT_SECRET` | Secret de signature, obligatoire, au moins 32 caractères |
-| `PORT` | Port HTTP, 3000 par défaut |
-| `CLIENT_ORIGIN` | Origine exacte autorisée pour un client hébergé séparément, facultative |
+| Variable de l'API | Usage                                                                   |
+| ----------------- | ----------------------------------------------------------------------- |
+| `MONGODB_URI`     | Adresse MongoDB, obligatoire                                            |
+| `JWT_SECRET`      | Secret de signature, obligatoire, au moins 32 caractères                |
+| `PORT`            | Port HTTP, 3000 par défaut                                              |
+| `CLIENT_ORIGIN`   | Origine exacte autorisée pour un client hébergé séparément, facultative |
 
 Le serveur refuse de démarrer sans configuration valide. Ne pas publier le fichier `.env`. Après un changement de secret, les utilisateurs doivent se reconnecter.
 
@@ -69,7 +72,7 @@ npm run check --prefix backend
 npm test --prefix backend
 ```
 
-La suite API démarre une instance MongoDB isolée avec `mongodb-memory-server`. Elle vérifie l'authentification, les sessions, les opérations sur les listes et produits, la validation des données et l'isolation entre comptes. Le premier lancement peut télécharger un binaire MongoDB et nécessite un accès réseau.
+La suite API démarre une instance MongoDB isolée avec `mongodb-memory-server`. Elle vérifie l'authentification, les sessions, les opérations sur les listes et produits, la validation des données et l'isolation entre comptes. Les créations répétées avec une même clé ne produisent qu'un élément. Les modifications utilisent une version atomique : deux onglets ne peuvent pas écraser silencieusement la même donnée. Le premier lancement peut télécharger un binaire MongoDB et nécessite un accès réseau.
 
 Pour le parcours navigateur :
 
@@ -79,7 +82,7 @@ npx playwright install chromium
 npm run test:e2e
 ```
 
-Playwright lance une API avec une base de test temporaire et le client sur le port 4534. Les ports 4434 et 4534 doivent être libres. Les tests couvrent le clavier, la persistance après rechargement, un parcours complet et le débordement horizontal aux largeurs 320, 390, 800 et 1440 pixels.
+Playwright lance une API avec une base de test temporaire et le client sur le port 4534. Les ports 4434 et 4534 doivent être libres. Les tests couvrent le clavier, la persistance après rechargement, un parcours complet, les doubles soumissions, les conflits entre onglets, l'annulation, une panne réseau, l'impression et le débordement horizontal aux largeurs 320, 390, 800 et 1440 pixels.
 
 L'API s'exécute sans surveillance de fichiers avec `npm start --prefix backend`. Le build du client se trouve dans `frontend/dist/frontend/browser`.
 
@@ -87,4 +90,6 @@ L'API s'exécute sans surveillance de fichiers avec `npm start --prefix backend`
 
 Pour un hébergement, servir le build Angular et rediriger `/api` vers l'API. Les URL du client nécessitent un repli vers `index.html`. Utiliser HTTPS, sauvegarder MongoDB et limiter l'accès réseau à la base.
 
-Les jetons d'accès expirent après 15 minutes et le client les renouvelle grâce à une session de dix jours. La déconnexion révoque cette session ; un jeton d'accès déjà émis peut rester valide jusqu'à son expiration. Le client conserve les jetons dans le stockage local du navigateur. Le projet n'intègre pas de réinitialisation de mot de passe, de vérification d'email, de partage entre comptes ni de mode hors ligne.
+Les jetons d'accès expirent après 15 minutes et le client les renouvelle grâce à une session de dix jours. La déconnexion révoque cette session ; un jeton d'accès déjà émis peut rester valide jusqu'à son expiration. Le client conserve les jetons dans le stockage local du navigateur. Un conflit recharge les données récentes et conserve le texte en cours de saisie. Les listes supprimées gardent un marqueur en base afin qu'une ancienne requête de création ne les recrée pas ; leurs produits sont supprimés.
+
+Le projet n'intègre pas de réinitialisation de mot de passe, de vérification d'email, de partage entre comptes ni de mode hors ligne.

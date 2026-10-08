@@ -10,7 +10,15 @@ const title = {
 };
 export const Liste = mongoose.model(
   "Liste",
-  new mongoose.Schema({ titre: title, _idUtilisateur: owner }),
+  new mongoose.Schema(
+    {
+      titre: title,
+      _idUtilisateur: owner,
+      deleted: { type: Boolean, default: false },
+      creationKey: { type: String },
+    },
+    { optimisticConcurrency: true },
+  ),
 );
 export const Piece = mongoose.model(
   "Piece",
@@ -18,7 +26,22 @@ export const Piece = mongoose.model(
     titre: title,
     _listeId: owner,
     achetee: { type: Boolean, default: false },
+    creationKey: { type: String },
   }),
+);
+Liste.schema.index(
+  { _idUtilisateur: 1, creationKey: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { creationKey: { $type: "string" } },
+  },
+);
+Piece.schema.index(
+  { _listeId: 1, creationKey: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { creationKey: { $type: "string" } },
+  },
 );
 const users = new mongoose.Schema({
   nom: { type: String, required: true, trim: true, maxlength: 100 },

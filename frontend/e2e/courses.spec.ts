@@ -404,6 +404,12 @@ test('auth compacte, session restaurée et fermeture depuis un autre onglet', as
     expect(box && box.y + box.height).toBeLessThan(844);
     for (const width of [1440, 800, 390, 320]) {
       await page.setViewportSize({ width, height: 844 });
+      await expect(button).toBeInViewport();
+      const visibleButton = await button.boundingBox();
+      if (width <= 390)
+        expect(
+          visibleButton && visibleButton.y + visibleButton.height,
+        ).toBeLessThan(844);
       expect(
         await page.evaluate(
           () => document.documentElement.scrollWidth <= innerWidth,

@@ -3,6 +3,7 @@ import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { Piece } from './api';
+import { type Liste, listData } from './api';
 import { pieceData, ignoreData } from './api';
 import { WorkspaceController } from './workspace-controller';
 @Component({
@@ -11,6 +12,60 @@ import { WorkspaceController } from './workspace-controller';
   templateUrl: './lists-workspace.html',
 })
 export class ListsWorkspace extends WorkspaceController {
+  listSearch = '';
+  listFilter = 'active';
+  page = 1;
+  inventory() {
+    return this.lists().filter(
+      (entry) =>
+        entry.titre
+          .toLocaleLowerCase('fr')
+          .includes(this.listSearch.toLocaleLowerCase('fr')) &&
+        (this.listFilter === 'all' ||
+          entry.archived === (this.listFilter === 'archived')),
+    );
+  }
+  pages() {
+    return Math.max(1, Math.ceil(this.inventory().length / 12));
+  }
+  pageEntries() {
+    return this.inventory().slice((this.page - 1) * 12, this.page * 12);
+  }
+  async manage(entry: Liste, action: 'duplicate' | 'archive' | 'delete') {
+    if (
+      this.busy() ||
+      (action === 'delete' &&
+        !confirm(`Supprimer « ${entry.titre} » et tous ses produits ?`))
+    )
+      return;
+    this.busy.set(true);
+    this.error.set('');
+    try {
+      const result = await this.api.request(
+        `listes/${entry._id}` + (action === 'duplicate' ? '/duplicate' : ''),
+        listData,
+        action === 'duplicate'
+          ? 'POST'
+          : action === 'archive'
+            ? 'PATCH'
+            : 'DELETE',
+        {
+          version: entry.version,
+          ...(action === 'archive' ? { archived: !entry.archived } : {}),
+        },
+      );
+      if (action === 'duplicate')
+        await this.router.navigateByUrl('/listes/' + result._id);
+      else {
+        this.page = 1;
+        this.retry();
+      }
+    } catch (error) {
+      this.report(error);
+    } finally {
+      this.busy.set(false);
+    }
+  }
   async addQuick() {
     if (this.busy() || !this.title.trim()) return;
     const listId = this.selected();

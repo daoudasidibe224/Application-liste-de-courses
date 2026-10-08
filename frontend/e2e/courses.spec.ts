@@ -452,3 +452,97 @@ test('auth compacte, session restaurée et fermeture depuis un autre onglet', as
   );
   await other.close();
 });
+
+test('inventaire complet : recherche, pages, duplication, archive et reprise après erreur', async ({
+  page,
+}) => {
+  await page.goto('/inscription');
+  await page
+    .getByLabel('Adresse email')
+    .fill('inventory-' + Date.now() + '@example.fr');
+  await page.getByLabel('Mot de passe').fill('Passphrase-123');
+  await page.getByRole('button', { name: 'Créer mon compte' }).click();
+  await page
+    .getByRole('link', { name: 'Créer une liste', exact: true })
+    .click();
+  await page.getByLabel('Nom de la liste').fill('Marché hebdomadaire');
+  await page.getByRole('button', { name: 'Enregistrer' }).click();
+  await page.getByLabel('Nouveau produit').fill('Tomates');
+  await page.getByRole('button', { name: '+ Ajouter' }).click();
+  await page.getByRole('checkbox', { name: /Tomates/ }).check();
+  await page
+    .getByRole('link', { name: 'Mes listes', exact: false })
+    .first()
+    .click();
+  await expect(
+    page.getByRole('heading', { name: 'Mes listes', exact: true }),
+  ).toBeVisible();
+  const card = page
+    .locator('.inventory-card')
+    .filter({ hasText: 'Marché hebdomadaire' });
+  await expect(card).toContainText('0 à acheter · 1 / 1');
+  await card.locator('summary').click();
+  await card.getByRole('button', { name: 'Dupliquer', exact: true }).click();
+  await expect(
+    page.getByRole('heading', { name: 'Marché hebdomadaire (copie)' }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole('checkbox', { name: /Tomates/ }),
+  ).not.toBeChecked();
+  await page
+    .getByRole('link', { name: 'Mes listes', exact: false })
+    .first()
+    .click();
+  const copy = page
+    .locator('.inventory-card')
+    .filter({ hasText: 'Marché hebdomadaire (copie)' });
+  await copy.locator('summary').click();
+  await copy.getByRole('button', { name: 'Archiver', exact: true }).click();
+  await page.getByLabel('Afficher les listes').selectOption('archived');
+  await expect(copy).toBeVisible();
+  await page.reload();
+  await page.getByLabel('Afficher les listes').selectOption('archived');
+  await expect(copy).toBeVisible();
+  await copy.locator('summary').click();
+  await copy.getByRole('button', { name: 'Restaurer', exact: true }).click();
+  await page.getByLabel('Afficher les listes').selectOption('all');
+  await page
+    .getByRole('searchbox', { name: 'Rechercher une liste' })
+    .fill('introuvable');
+  await expect(
+    page.getByRole('heading', { name: 'Aucune liste trouvée' }),
+  ).toBeVisible();
+  await page.getByRole('searchbox', { name: 'Rechercher une liste' }).fill('');
+  const token = await page.evaluate(() =>
+    localStorage.getItem('x-access-token'),
+  );
+  if (!token) throw Error('Session absente');
+  for (let i = 0; i < 13; i++)
+    await page.request.post('/api/listes', {
+      headers: { 'x-access-token': token },
+      data: { titre: 'Ticket ' + i },
+    });
+  await page.reload();
+  await page.getByLabel('Afficher les listes').selectOption('all');
+  await expect(page.locator('.inventory-card')).toHaveCount(12);
+  await page.getByRole('button', { name: 'Suivante →' }).click();
+  await expect(page.locator('.inventory-card')).toHaveCount(3);
+  for (const width of [1440, 800, 390, 320]) {
+    await page.setViewportSize({ width, height: 844 });
+    await page.locator('.inventory-card').first().locator('summary').click();
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBeTruthy();
+    await page.locator('.inventory-card').first().locator('summary').click();
+  }
+  await page.route('**/api/listes', (route) => route.abort());
+  await page.reload();
+  await expect(page.getByRole('alert')).toContainText('Connexion indisponible');
+  await page.unroute('**/api/listes');
+  await page.getByRole('button', { name: 'Réessayer le chargement' }).click();
+  await expect(
+    page.getByRole('heading', { name: 'Mes listes', exact: true }),
+  ).toBeVisible();
+});

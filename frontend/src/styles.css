@@ -1209,3 +1209,526 @@ select:focus-visible {
     margin: 0;
   }
 }
+
+/* La préparation laisse de la place aux lignes du ticket. */
+.list-heading h1,
+.content > h1 {
+  font-size: clamp(2.1rem, 4vw, 2.8rem);
+  line-height: 1;
+}
+.list-heading {
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+}
+.progress {
+  padding-bottom: 14px;
+  margin-bottom: 16px;
+}
+.quick-add {
+  margin-bottom: 4px;
+}
+.details-toggle {
+  margin-top: 2px;
+  margin-bottom: 6px;
+}
+.sort-control {
+  margin: 12px 0 16px;
+}
+.product-group > h2 {
+  padding-top: 10px;
+}
+.list-overview h1 {
+  font-size: 2.8rem;
+  margin-bottom: 12px;
+}
+.list-overview ul {
+  list-style: none;
+  padding: 0;
+  margin: 24px 0;
+  border-top: 2px solid var(--ink);
+}
+.list-overview li {
+  border-bottom: 1px dashed var(--line);
+}
+.list-overview li a {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 0;
+  min-height: 56px;
+  text-decoration: none;
+  font-size: 1.1rem;
+}
+.list-overview li a:hover {
+  color: var(--tomato);
+}
+.list-overview li a span:first-child {
+  overflow-wrap: anywhere;
+}
+.welcome {
+  padding: 24px 0;
+}
+.welcome h1 {
+  font-size: 2.8rem;
+}
+.retry {
+  border: 1px solid var(--tomato);
+  margin-bottom: 16px;
+}
+@media (max-width: 600px) {
+  .list-heading h1,
+  .content > h1,
+  .store-mode .list-heading h1 {
+    font-size: 2.15rem;
+  }
+  .content.ticket {
+    padding-top: 20px;
+  }
+  .list-heading .eyebrow {
+    margin-bottom: 8px;
+  }
+  .store-switch {
+    padding-top: 4px;
+    gap: 6px;
+  }
+  .store-mode .store-switch span {
+    display: none;
+  }
+  .store-mode .sort-control {
+    margin: 8px 0 12px;
+  }
+  .store-mode .list-heading {
+    padding-bottom: 8px;
+    margin-bottom: 8px;
+  }
+  .list-overview h1,
+  .welcome h1 {
+    font-size: 2.35rem;
+  }
+}
+
+/* Un carnet à parcourir, puis le ticket à emporter. */
+body {
+  background: #f6f3ed;
+}
+.carnet-navigation.header {
+  max-width: 1240px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 30px;
+  gap: 20px;
+  border-bottom: 1px solid #dbd4c8;
+  background: transparent;
+}
+.carnet-navigation .brand {
+  font: 600 1.2rem Barlow;
+  gap: 10px;
+  white-space: nowrap;
+}
+.carnet-symbol {
+  display: grid;
+  place-content: center;
+  width: 32px;
+  height: 36px;
+  border-left: 4px solid var(--tomato);
+  background: white;
+  color: var(--tomato);
+  font-size: 1.4rem;
+}
+.carnet-index {
+  border: 0;
+  padding: 0;
+  gap: 22px;
+  width: auto;
+  max-width: none;
+  align-items: center;
+  flex-wrap: wrap;
+  font-size: 0.85rem;
+}
+.inventory-link {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-weight: 600;
+  color: var(--ink);
+  text-decoration: none;
+  min-height: 44px;
+  border-bottom: 2px solid var(--tomato);
+}
+.inventory-link span {
+  font-size: 0.72rem;
+  background: #eee7de;
+  padding: 3px 7px;
+}
+.carnet-index .list-picker {
+  max-width: 190px;
+  flex: 1;
+}
+.carnet-index select {
+  font-size: 0.8rem;
+  min-height: 40px;
+}
+.carnet-index .new-list {
+  background: var(--ink);
+  color: white;
+  padding: 10px 14px;
+  font-size: 0.8rem;
+  min-height: 42px;
+}
+.carnet-index .quiet {
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+.workspace {
+  max-width: 1240px;
+  margin: 32px auto 55px !important;
+}
+.content.ticket {
+  max-width: 720px;
+  margin: 0 auto !important;
+}
+.content.inventory-ticket {
+  max-width: none;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+.inventory-ticket::after,
+.inventory-ticket .receipt-end {
+  display: none;
+}
+.inventory-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  margin: 12px 0 26px;
+}
+.inventory-heading h1 {
+  font: 600 2.1rem Barlow;
+  letter-spacing: -0.025em;
+  margin: 0 0 10px;
+  text-transform: none;
+}
+.inventory-heading .muted {
+  margin: 0;
+}
+.inventory-heading .primary {
+  font-family: Barlow;
+  font-size: 0.85rem;
+  text-transform: none;
+  letter-spacing: 0;
+  min-height: 44px;
+}
+.inventory-tools {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 18px 0;
+  border-top: 1px solid #d9d3c9;
+  border-bottom: 1px solid #d9d3c9;
+}
+.inventory-tools > label:first-child {
+  flex: 1;
+  max-width: 410px;
+}
+.inventory-tools > label:last-child {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.8rem;
+}
+.inventory-tools input {
+  margin: 0;
+  font-size: 0.85rem;
+}
+.inventory-tools select {
+  font-size: 0.8rem;
+}
+.inventory-count {
+  margin: 16px 0;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+.list-overview .inventory-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  border: 0;
+}
+.inventory-grid > .inventory-card {
+  background: #fff;
+  border: 1px solid #d9d3c9;
+  border-top: 3px solid var(--tomato);
+  min-width: 0;
+}
+.list-overview li a.inventory-open {
+  display: block;
+  padding: 22px;
+  text-decoration: none;
+}
+.inventory-open h2 {
+  font: 700 1.8rem "Barlow Condensed";
+  text-transform: uppercase;
+  margin: 12px 0;
+  overflow-wrap: anywhere;
+}
+.inventory-state {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.inventory-open p {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-bottom: 15px;
+}
+.inventory-open progress {
+  height: 3px;
+  display: block;
+  margin-bottom: 18px;
+}
+.inventory-cta {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--tomato);
+}
+.list-options {
+  border-top: 1px dashed #d9d3c9;
+  margin: 0 22px;
+  padding: 10px 0;
+  font-size: 0.76rem;
+}
+.list-options summary {
+  cursor: pointer;
+  min-height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  list-style: none;
+}
+.list-options summary::after {
+  content: "+";
+  font-size: 1.1rem;
+}
+.list-options[open] summary::after {
+  content: "−";
+}
+.list-options > div {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  padding: 8px 0;
+}
+.list-overview .list-options a,
+.list-options button {
+  font: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 8px;
+  background: #f4f1eb;
+  text-decoration: none;
+  border: 0;
+}
+.list-options a:hover,
+.list-options button:hover {
+  background: #ece5da;
+}
+.inventory-no-match {
+  grid-column: 1/-1;
+  padding: 30px 0;
+  border: 0 !important;
+}
+.inventory-no-match h2 {
+  font-family: Barlow;
+  font-size: 1.2rem;
+}
+.inventory-no-match p {
+  font-size: 0.85rem;
+}
+.inventory-pages {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 24px;
+  padding-top: 28px;
+  font-size: 0.85rem;
+}
+.archive-banner {
+  background: #f3eee4;
+  padding: 16px;
+  margin-bottom: 20px;
+  font-size: 0.85rem;
+}
+.archive-banner p {
+  margin: 0 0 8px;
+}
+.archive-banner button {
+  border: 1px solid var(--ink);
+}
+.archived-ticket .quick-add,
+.archived-ticket .details-toggle,
+.archived-ticket .product-details,
+.archived-ticket .product-actions {
+  display: none;
+}
+.carnet-auth-heading.header {
+  max-width: 1240px;
+  justify-content: flex-start;
+  padding: 20px 30px;
+  border-bottom: 1px solid #dbd4c8;
+}
+.carnet-auth-heading .brand {
+  font: 600 1.2rem Barlow;
+}
+footer {
+  max-width: 1180px;
+  border-color: #dbd4c8;
+}
+@media (max-width: 1050px) {
+  .list-overview .inventory-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .carnet-index {
+    gap: 14px;
+  }
+  .carnet-index .list-picker {
+    max-width: 170px;
+  }
+  .carnet-navigation .brand {
+    font-size: 1.05rem;
+  }
+}
+@media (max-width: 750px) {
+  .carnet-navigation.header {
+    display: grid;
+    gap: 10px;
+    padding: 14px 16px;
+  }
+  .carnet-navigation .brand {
+    font-size: 1.1rem;
+  }
+  .carnet-index {
+    display: flex;
+    width: 100%;
+    gap: 14px;
+    align-items: center;
+  }
+  .carnet-index .list-picker {
+    max-width: none;
+    flex-basis: 100%;
+    order: 4;
+    display: block;
+  }
+  .carnet-index .quiet {
+    margin-left: auto;
+    min-height: 42px;
+  }
+  .inventory-link {
+    font-size: 0.82rem;
+  }
+  .carnet-index .new-list {
+    font-size: 0.72rem;
+    min-height: 38px;
+  }
+  .workspace {
+    padding: 0 16px;
+    margin: 22px auto 40px !important;
+  }
+  .inventory-heading {
+    display: block;
+    margin: 0 0 20px;
+  }
+  .inventory-heading h1 {
+    font-size: 1.8rem;
+  }
+  .inventory-heading .primary {
+    margin-top: 18px;
+  }
+  .inventory-tools {
+    display: grid;
+    gap: 12px;
+    padding: 15px 0;
+  }
+  .inventory-tools > label:first-child {
+    max-width: none;
+  }
+  .inventory-tools > label:last-child {
+    justify-content: space-between;
+  }
+  .inventory-tools select {
+    min-width: 180px;
+  }
+  .list-overview .inventory-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .inventory-open h2 {
+    font-size: 1.75rem;
+  }
+  .list-heading .actions {
+    gap: 10px;
+  }
+  .carnet-auth-heading.header {
+    padding: 16px;
+  }
+}
+@media print {
+  .back,
+  .archive-banner {
+    display: none !important;
+  }
+  body {
+    background: white;
+  }
+}
+
+body {
+  min-height: 100vh;
+}
+button,
+select,
+input:not([type="checkbox"]),
+summary,
+.list-heading .quiet,
+.details-toggle,
+.list-options button,
+.list-options summary,
+.filters button,
+.inventory-pages button,
+.carnet-index .new-list,
+.carnet-index .quiet {
+  min-height: 44px;
+}
+.carnet-navigation .brand,
+.carnet-auth-heading .brand {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}
+.auth-switch a,
+.list-heading a,
+.list-options a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+
+.auth-card .password-toggle,
+.carnet-index .list-picker select {
+  min-height: 44px;
+}
+
+button {
+  min-width: 44px;
+}

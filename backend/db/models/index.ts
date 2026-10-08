@@ -16,6 +16,13 @@ export const Liste = mongoose.model(
       titre: title,
       _idUtilisateur: owner,
       deleted: { type: Boolean, default: false },
+      archived: { type: Boolean, default: false },
+      copyPending: { type: Boolean, default: false },
+      copySource: { type: String },
+      copyVersion: { type: Number },
+      copySnapshot: [
+        { titre: title, quantity: Number, unit: String, category: String },
+      ],
       creationKey: { type: String },
     },
     { optimisticConcurrency: true },

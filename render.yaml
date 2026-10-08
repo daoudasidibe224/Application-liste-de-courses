@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: carnet-de-courses
+    runtime: docker
+    repo: https://github.com/daoudasidibe224/carnet-de-courses
+    branch: improve/public-2026-10
+    plan: free
+    region: frankfurt
+    numInstances: 1
+    autoDeployTrigger: off
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: TRUST_PROXY
+        value: "1"
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false

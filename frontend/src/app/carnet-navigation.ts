@@ -4,25 +4,34 @@ import type { Liste } from './api';
 @Component({
   selector: 'app-carnet-nav',
   imports: [RouterLink],
-  template: ` <header class="header carnet-navigation">
-    <p class="nav-caption">Votre carnet personnel</p>
-    <a class="brand" routerLink="/listes">Carnet de courses</a>
-    <div class="carnet-index">
-      <label
-        >Ouvrir une liste<select
-          aria-label="Ouvrir une liste"
-          (change)="choose($event)"
-        >
-          <option value="" [selected]="!selected()">Toutes mes listes</option>
-          @for (list of lists(); track list._id) {
-            <option [value]="list._id" [selected]="selected() === list._id">{{ list.titre }}</option>
-          }
-        </select></label
-      ><a class="new-list" routerLink="/nouvelle-liste">+ Nouvelle liste</a
-      ><button class="quiet" (click)="logout.emit()" [disabled]="busy()">
+  template: `<header class="header carnet-navigation">
+    <a class="brand" routerLink="/listes"
+      ><span class="carnet-symbol" aria-hidden="true">▤</span>Carnet de
+      courses</a
+    >
+    <nav aria-label="Votre carnet" class="carnet-index">
+      <a class="inventory-link" routerLink="/listes"
+        >Mes listes <span>{{ lists().length }}</span></a
+      >
+      @if (selected()) {
+        <label class="list-picker"
+          ><span class="sr-only">Ouvrir une liste</span
+          ><select aria-label="Ouvrir une liste" (change)="choose($event)">
+            <option value="">Toutes mes listes</option>
+            @for (list of lists(); track list._id) {
+              <option
+                [value]="list._id"
+                [selected]="selected() === list._id"
+                [textContent]="list.titre + (list.archived ? ' · archive' : '')"
+              ></option>
+            }</select
+        ></label>
+      }
+      <a class="new-list" routerLink="/nouvelle-liste">+ Nouvelle liste</a>
+      <button class="quiet" (click)="logout.emit()" [disabled]="busy()">
         Déconnexion
       </button>
-    </div>
+    </nav>
   </header>`,
 })
 export class CarnetNavigation {

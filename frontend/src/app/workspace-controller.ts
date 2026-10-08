@@ -66,8 +66,8 @@ export abstract class WorkspaceController {
   toggleStore() {
     this.storeMode = !this.storeMode;
     if (this.storeMode) {
-      this.search = "";
-      this.filter = "all";
+      this.search = '';
+      this.filter = 'all';
     }
     this.saveView();
   }
@@ -95,6 +95,9 @@ export abstract class WorkspaceController {
         (this.filter === 'all' ||
           (this.filter === 'remaining' ? !piece.achetee : piece.achetee)),
     );
+  }
+  retry() {
+    void this.load(true);
   }
   private async load(preserveDraft = false) {
     const draft = {

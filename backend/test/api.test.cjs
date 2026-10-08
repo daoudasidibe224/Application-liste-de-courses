@@ -356,3 +356,117 @@ test("deux connexions simultanées restent actives, déconnexion ne révoque que
     .set("x-access-token", logins[1].headers["x-access-token"])
     .expect(200);
 });
+
+test("inventaire privé, progression, archive persistée et duplication rejouable", async () => {
+  const response = await request(app)
+    .post("/api/utilisateurs")
+    .send({ email: "inventory@example.fr", mdp: "Passphrase-123" })
+    .expect(200);
+  const token = response.headers["x-access-token"];
+  const auth = (req) => req.set("x-access-token", token);
+  const list = (
+    await auth(request(app).post("/api/listes"))
+      .send({ titre: "Marché" })
+      .expect(201)
+  ).body;
+  const product = (
+    await auth(request(app).post("/api/listes/" + list._id + "/pieces"))
+      .send({
+        titre: "Tomates",
+        quantity: 1.5,
+        unit: "kg",
+        category: "Fruits et légumes",
+      })
+      .expect(201)
+  ).body;
+  await auth(
+    request(app).patch("/api/listes/" + list._id + "/pieces/" + product._id),
+  )
+    .send({ achetee: true, version: 0 })
+    .expect(200);
+  const inventory = (await auth(request(app).get("/api/listes")).expect(200))
+    .body;
+  assert.equal(inventory.find((item) => item._id === list._id).total, 1);
+  assert.equal(inventory.find((item) => item._id === list._id).bought, 1);
+  const key = require("node:crypto").randomUUID();
+  const copies = await Promise.all(
+    [0, 1].map(() =>
+      auth(request(app).post("/api/listes/" + list._id + "/duplicate"))
+        .set("Idempotency-Key", key)
+        .send({ version: 0 })
+        .expect(201),
+    ),
+  );
+  assert.equal(copies[0].body._id, copies[1].body._id);
+  const pieces = (
+    await auth(
+      request(app).get("/api/listes/" + copies[0].body._id + "/pieces"),
+    ).expect(200)
+  ).body;
+  assert.equal(pieces.length, 1);
+  assert.equal(pieces[0].achetee, false);
+  assert.equal(pieces[0].quantity, 1.5);
+  assert.equal(pieces[0].unit, "kg");
+  const archived = (
+    await auth(request(app).patch("/api/listes/" + list._id))
+      .send({ archived: true, version: 0 })
+      .expect(200)
+  ).body;
+  assert.equal(archived.archived, true);
+  assert.equal(
+    (await auth(request(app).get("/api/listes")).expect(200)).body.find(
+      (item) => item._id === list._id,
+    ).archived,
+    true,
+  );
+  await auth(request(app).patch("/api/listes/" + list._id))
+    .send({ archived: false, version: 0 })
+    .expect(409);
+  await auth(request(app).patch("/api/listes/" + list._id))
+    .send({ archived: false, version: 1 })
+    .expect(200);
+  const replay = await auth(
+    request(app).post("/api/listes/" + list._id + "/duplicate"),
+  )
+    .set("Idempotency-Key", key)
+    .send({ version: 0 })
+    .expect(201);
+  assert.equal(replay.body._id, copies[0].body._id);
+  await auth(request(app).post("/api/listes/" + list._id + "/duplicate"))
+    .set("Idempotency-Key", key)
+    .send({ version: 2 })
+    .expect(409);
+  const stranger = (
+    await request(app)
+      .post("/api/utilisateurs")
+      .send({ email: "inventory-other@example.fr", mdp: "Passphrase-123" })
+      .expect(200)
+  ).headers["x-access-token"];
+  await request(app)
+    .post("/api/listes/" + list._id + "/duplicate")
+    .set("x-access-token", stranger)
+    .send({ version: 2 })
+    .expect(404);
+  await request(app).get("/health").expect(200);
+});
+
+test("une liste archivée reste lisible et refuse les modifications de produits", async () => {
+  const account = await request(app)
+    .post("/utilisateurs")
+    .send({ email: "archived-readonly@example.fr", mdp: "Passphrase-123" })
+    .expect(200);
+  const auth = (req) =>
+    req.set("x-access-token", account.headers["x-access-token"]);
+  const list = (
+    await auth(request(app).post("/listes"))
+      .send({ titre: "Archive" })
+      .expect(201)
+  ).body;
+  await auth(request(app).patch("/listes/" + list._id))
+    .send({ archived: true, version: 0 })
+    .expect(200);
+  await auth(request(app).get("/listes/" + list._id + "/pieces")).expect(200);
+  await auth(request(app).post("/listes/" + list._id + "/pieces"))
+    .send({ titre: "Interdit" })
+    .expect(409);
+});

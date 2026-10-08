@@ -4,7 +4,11 @@ import { rateLimit } from "express-rate-limit";
 import users from "./routes/utilisateur.ts";
 import lists from "./routes/liste.ts";
 import { HttpError } from "./contracts.ts";
+import { mongoose } from "./db/mongoose.ts";
+import { resolve } from "node:path";
+import { existsSync } from "node:fs";
 const app = express();
+if (process.env.TRUST_PROXY === "1") app.set("trust proxy", 1);
 app.disable("x-powered-by");
 app.use(helmet());
 app.use(express.json({ limit: "16kb" }));
@@ -31,8 +35,12 @@ app.use((req, res, next) => {
   }
   next();
 });
-app.get("/health", (_req, res) => res.json({ status: "ok" }));
-app.use(
+app.get("/health", (_req, res) => {
+  const ready = mongoose.connection.readyState === 1;
+  res.status(ready ? 200 : 503).json({ status: ready ? "ok" : "unavailable" });
+});
+const api = express.Router();
+api.use(
   "/utilisateurs",
   rateLimit({
     windowMs: 15 * 60 * 1000,
@@ -40,8 +48,37 @@ app.use(
     message: { message: "Trop de demandes. Réessayez dans quelques minutes." },
   }),
 );
-app.use("/", users);
-app.use("/listes", lists);
+api.use("/", users);
+api.use("/listes", lists);
+app.use("/api", api, (_req, res) =>
+  res.status(404).json({ message: "Ressource introuvable." }),
+);
+if (process.env.CLIENT_DIST) {
+  const directory = resolve(process.env.CLIENT_DIST);
+  const index = resolve(directory, "index.html");
+  if (!existsSync(index))
+    throw new Error(
+      "CLIENT_DIST doit contenir le build Angular et index.html.",
+    );
+  app.use(express.static(directory));
+  app.get(
+    [
+      "/",
+      "/login",
+      "/connexion",
+      "/inscription",
+      "/listes",
+      "/listes/:id",
+      "/nouvelle-liste",
+      "/modifier-liste/:id",
+      "/listes/:id/nouvelle-piece",
+      "/listes/:id/modifier-piece/:pieceId",
+    ],
+    (_req, res) => res.sendFile(index),
+  );
+} else {
+  app.use("/", api);
+}
 app.use((_req, res) =>
   res.status(404).json({ message: "Ressource introuvable." }),
 );

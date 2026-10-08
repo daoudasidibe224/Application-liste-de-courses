@@ -10,6 +10,9 @@
     <section class="content ticket">
       @if (error()) {
       <p class="error" role="alert">{{ error() }}</p>
+      <button class="quiet retry" (click)="retry()" [disabled]="loading()">
+        Réessayer le chargement
+      </button>
       }
       <p class="sr-only" aria-live="polite">{{ notice() }}</p>
       @if (loading()) {

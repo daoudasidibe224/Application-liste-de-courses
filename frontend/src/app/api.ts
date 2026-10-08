@@ -20,6 +20,9 @@ export interface Liste {
   _id: string;
   titre: string;
   version: number;
+  archived: boolean;
+  total: number;
+  bought: number;
 }
 export interface Piece {
   _id: string;
@@ -55,10 +58,18 @@ function field(value: unknown): string {
 }
 export const listData: Decoder<Liste> = (value) => {
   const item = object(value);
+  if (item.archived !== undefined && typeof item.archived !== 'boolean')
+    throw new Error('Réponse serveur invalide.');
+  const total = version(item.total ?? 0),
+    bought = version(item.bought ?? 0);
+  if (bought > total) throw new Error('Réponse serveur invalide.');
   return {
     _id: field(item._id),
     titre: field(item.titre),
     version: version(item.__v),
+    archived: item.archived === true,
+    total,
+    bought,
   };
 };
 export const pieceData: Decoder<Piece> = (value) => {

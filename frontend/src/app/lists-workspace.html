@@ -7,14 +7,37 @@
 />
 <main id="main">
   <div class="workspace" [attr.aria-busy]="loading()">
-    <section class="content ticket" [class.store-mode]="storeMode">
+    <section
+      class="content ticket"
+      [class.store-mode]="storeMode && !!list()"
+      [class.inventory-ticket]="!selected() && lists().length > 0"
+      [class.archived-ticket]="list()?.archived"
+    >
       @if (error()) {
       <p class="error" role="alert">{{ error() }}</p>
+      <button class="quiet retry" (click)="retry()" [disabled]="loading()">
+        Réessayer le chargement
+      </button>
       }
       <p class="sr-only" aria-live="polite">{{ notice() }}</p>
       @if (loading()) {
       <p role="status">Chargement de vos courses…</p>
       } @else if (list()) {
+      <a class="back" routerLink="/listes">← Mes listes</a>
+      @if(list()?.archived){
+      <div class="archive-banner">
+        <p>
+          Cette liste est archivée. Restaurez-la pour reprendre vos courses.
+        </p>
+        <button
+          class="quiet"
+          (click)="manage(list()!, 'archive')"
+          [disabled]="busy()"
+        >
+          Restaurer la liste
+        </button>
+      </div>
+      }
       <div class="list-heading">
         <div>
           <p class="eyebrow">Votre ticket de courses</p>
@@ -24,6 +47,18 @@
           <button class="quiet" (click)="print()">Imprimer le ticket</button>
           <a class="quiet" [routerLink]="['/modifier-liste', selected()]"
             >Renommer</a
+          ><button
+            class="quiet"
+            (click)="manage(list()!, 'duplicate')"
+            [disabled]="busy()"
+          >
+            Dupliquer</button
+          ><button
+            class="quiet"
+            (click)="manage(list()!, 'archive')"
+            [disabled]="busy()"
+          >
+            {{list()?.archived ? 'Restaurer' : 'Archiver'}}</button
           ><button class="quiet danger" (click)="remove()" [disabled]="busy()">
             Supprimer la liste
           </button>
@@ -147,7 +182,7 @@
                 type="checkbox"
                 [checked]="piece.achetee"
                 (change)="toggle(piece,$event)"
-                [disabled]="busy()"
+                [disabled]="busy() || !!list()?.archived"
               /><span
                 >{{ piece.titre }}<small class="product-meta"
                   >{{piece.quantity}} {{piece.unit}}
@@ -186,7 +221,110 @@
           : 'Ajoutez ce dont vous avez besoin juste au-dessus.' }}
         </p>
       </div>
-      } } @else {
+      } } @else if (lists().length) {
+      <div class="list-overview">
+        <div class="inventory-heading">
+          <div>
+            <p class="eyebrow">Votre carnet personnel</p>
+            <h1>Mes listes</h1>
+            <p class="muted">Préparez la suivante, reprenez celle du jour.</p>
+          </div>
+          <a class="primary" routerLink="/nouvelle-liste">Créer une liste</a>
+        </div>
+        <div class="inventory-tools">
+          <label
+            ><span class="sr-only">Rechercher une liste</span
+            ><input
+              type="search"
+              [(ngModel)]="listSearch"
+              (ngModelChange)="page=1"
+              placeholder="Rechercher une liste…" /></label
+          ><label
+            >Afficher<select
+              [(ngModel)]="listFilter"
+              (ngModelChange)="page=1"
+              aria-label="Afficher les listes"
+            >
+              <option value="active">Listes actives</option>
+              <option value="archived">Archives</option>
+              <option value="all">Toutes les listes</option>
+            </select></label
+          >
+        </div>
+        <p class="inventory-count" role="status">
+          {{inventory().length}} {{inventory().length === 1 ? 'liste' :
+          'listes'}} · page {{page}} / {{pages()}}
+        </p>
+        <ul class="inventory-grid">
+          @for(entry of pageEntries();track entry._id){
+          <li class="inventory-card">
+            <a class="inventory-open" [routerLink]="['/listes',entry._id]"
+              ><span class="inventory-state"
+                >{{entry.archived ? 'Archive' : entry.total && entry.bought ===
+                entry.total ? 'Courses terminées' : 'À préparer'}}</span
+              >
+              <h2>{{entry.titre}}</h2>
+              <p>
+                {{entry.total ? entry.total - entry.bought + ' à acheter · ' +
+                entry.bought + ' / ' + entry.total + ' dans le panier' : 'Aucun
+                produit pour le moment'}}
+              </p>
+              <progress
+                [value]="entry.bought"
+                [max]="entry.total || 1"
+                [attr.aria-label]="'Progression de ' + entry.titre"
+              ></progress
+              ><span class="inventory-cta">Ouvrir le ticket →</span></a
+            >
+            <details class="list-options">
+              <summary>Gérer cette liste</summary>
+              <div>
+                <a [routerLink]="['/modifier-liste',entry._id]">Renommer</a
+                ><button
+                  (click)="manage(entry,'duplicate')"
+                  [disabled]="busy()"
+                >
+                  Dupliquer</button
+                ><button (click)="manage(entry,'archive')" [disabled]="busy()">
+                  {{entry.archived ? 'Restaurer' : 'Archiver'}}</button
+                ><button
+                  class="danger"
+                  (click)="manage(entry,'delete')"
+                  [disabled]="busy()"
+                >
+                  Supprimer
+                </button>
+              </div>
+            </details>
+          </li>
+          } @empty {
+          <li class="inventory-no-match">
+            <h2>
+              {{listFilter === 'archived' && !listSearch ? 'Aucune liste
+              archivée' : 'Aucune liste trouvée'}}
+            </h2>
+            <p>
+              Changez la recherche ou l’affichage pour retrouver vos tickets.
+            </p>
+          </li>
+          }
+        </ul>
+        @if(pages()>1){
+        <nav class="inventory-pages" aria-label="Pages des listes">
+          <button class="quiet" [disabled]="page===1" (click)="page=page-1">
+            ← Précédente</button
+          ><span>{{page}} / {{pages()}}</span
+          ><button
+            class="quiet"
+            [disabled]="page===pages()"
+            (click)="page=page+1"
+          >
+            Suivante →
+          </button>
+        </nav>
+        }
+      </div>
+      } @else if (!error()) {
       <div class="empty welcome">
         <p class="eyebrow">On prépare les courses ?</p>
         <h1>Tout commence<br />par une liste.</h1>

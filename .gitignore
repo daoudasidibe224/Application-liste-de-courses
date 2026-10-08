@@ -1,0 +1,11 @@
+node_modules/
+.env
+.env.*
+!.env.example
+dist/
+.angular/
+coverage/
+*.log
+test-results/
+playwright-report/
+e2e-courses.png

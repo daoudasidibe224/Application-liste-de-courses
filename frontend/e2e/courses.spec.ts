@@ -1,0 +1,68 @@
+import { test, expect } from '@playwright/test';
+test('parcours réel : compte, listes, produits, filtres et déconnexion', async ({ page }) => {
+  const errors: string[] = []; page.on('pageerror', error => errors.push(error.message));
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/inscription');
+  await page.getByLabel('Prénom', { exact: true }).fill('Camille');
+  await page.getByLabel('Nom', { exact: true }).fill('Test');
+  await page.getByLabel('Adresse email').fill(`camille-${Date.now()}@example.fr`);
+  await page.getByLabel('Mot de passe').fill('Passphrase-123');
+  await page.getByRole('button', { name: 'Créer mon compte' }).click();
+  await expect(page.getByRole('heading', { name: 'Tout commence par une liste.' })).toBeVisible();
+  await page.getByRole('link', { name: 'Créer une liste', exact: true }).click();
+  await page.getByLabel('Nom de la liste').fill('Courses samedi');
+  await page.getByRole('button', { name: 'Enregistrer' }).click();
+  await expect(page.getByRole('heading', { name: 'Courses samedi' })).toBeVisible();
+  await page.getByLabel('Nouveau produit').fill('Tomates');
+  await page.getByRole('button', { name: '+ Ajouter' }).click();
+  await expect(page.getByRole('checkbox', { name: 'Tomates' })).toBeVisible();
+  await page.getByLabel('Nouveau produit').fill('Pain');
+  await page.getByRole('button', { name: '+ Ajouter' }).click();
+  await page.getByRole('checkbox', { name: 'Tomates' }).check();
+  await expect(page.getByRole('checkbox', { name: 'Tomates' })).toBeChecked();
+  await page.getByRole('button', { name: 'À acheter', exact: true }).click();
+  await expect(page.getByRole('checkbox', { name: 'Tomates' })).toHaveCount(0);
+  await page.getByRole('link', { name: 'Modifier Pain', exact: true }).click();
+  await expect(page.getByLabel('Nom du produit')).toHaveValue('Pain');
+  await page.getByLabel('Nom du produit').fill('Pain complet');
+  await page.getByRole('button', { name: 'Enregistrer' }).click();
+  await page.getByLabel('Rechercher un produit').fill('complet');
+  await expect(page.getByRole('checkbox', { name: 'Pain complet' })).toBeVisible();
+  await expect(page.getByRole('checkbox', { name: 'Tomates' })).toHaveCount(0);
+  await page.getByLabel('Rechercher un produit').fill('');
+  await page.getByRole('link', { name: 'Renommer', exact: true }).click();
+  await expect(page.getByLabel('Nom de la liste')).toHaveValue('Courses samedi');
+  await page.getByLabel('Nom de la liste').fill('Panier du samedi');
+  await page.getByRole('button', { name: 'Enregistrer' }).click();
+  for (const width of [320, 390, 800, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();
+  }
+  await page.screenshot({ path: process.env.QA_SCREENSHOT || 'e2e-courses.png', fullPage: true });
+  await page.setViewportSize({ width: 390, height: 844 });
+  if (process.env.QA_MOBILE_SCREENSHOT) await page.screenshot({ path: process.env.QA_MOBILE_SCREENSHOT, fullPage: true });
+  await page.evaluate(() => localStorage.setItem('x-access-token', 'expired-token'));
+  await page.reload();
+  await expect(page.getByRole('heading', { name: 'Panier du samedi' })).toBeVisible();
+  page.on('dialog', dialog => dialog.accept());
+  await page.getByRole('button', { name: 'Supprimer Pain complet', exact: true }).click();
+  await expect(page.getByRole('checkbox', { name: 'Pain complet' })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Supprimer la liste', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Tout commence par une liste.' })).toBeVisible();
+  await page.evaluate(() => localStorage.setItem('unrelated-app', 'keep'));
+  await page.getByRole('button', { name: 'Déconnexion' }).click();
+  await expect(page).toHaveURL(/login/);
+  expect(await page.evaluate(() => localStorage.getItem('unrelated-app'))).toBe('keep');
+  expect(errors).toEqual([]);
+});
+
+test('erreur de connexion visible et accès aux listes protégé', async ({ page }) => {
+  await page.goto('/listes');
+  await expect(page).toHaveURL(/login/);
+  await page.route('**/api/utilisateurs/login', route => route.fulfill({ status: 401, contentType: 'application/json', body: JSON.stringify({ message: 'Email ou mot de passe invalide.' }) }));
+  await page.getByLabel('Adresse email').fill('wrong@example.fr');
+  await page.getByLabel('Mot de passe').fill('Passphrase-123');
+  await page.getByRole('button', { name: 'Se connecter', exact: true }).click();
+  await expect(page.getByRole('alert')).toHaveText('Email ou mot de passe invalide.');
+  await expect(page.getByRole('button', { name: 'Se connecter', exact: true })).toBeEnabled();
+});

@@ -36,7 +36,7 @@ test('parcours réel : compte, listes, produits, filtres et déconnexion', async
   await page.getByRole('button', { name: 'Enregistrer' }).click();
   for (const width of [320, 390, 800, 1440]) {
     await page.setViewportSize({ width, height: 900 });
-    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), JSON.stringify(await page.evaluate(() => [...document.querySelectorAll('body *')].filter(element => { const box = element.getBoundingClientRect(); return box.right > innerWidth + 1 || box.left < -1; }).map(element => ({ tag: element.tagName, className: element.className, text: element.textContent?.trim().slice(0, 60), box: element.getBoundingClientRect().toJSON() }))))).toBeTruthy();
   }
   await page.screenshot({ path: process.env.QA_SCREENSHOT || 'e2e-courses.png', fullPage: true });
   await page.setViewportSize({ width: 390, height: 844 });
@@ -85,7 +85,7 @@ test('clavier et persistance à 320 pixels', async ({ page }) => {
  await page.reload(); await expect(checkbox).toBeChecked();
  await page.getByRole('link', { name: 'Modifier Poires' }).focus(); await page.keyboard.press('Enter');
  await expect(page.getByLabel('Nom du produit')).toHaveValue('Poires');
- expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();
+ expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), JSON.stringify(await page.evaluate(() => [...document.querySelectorAll('body *')].filter(element => { const box = element.getBoundingClientRect(); return box.right > innerWidth + 1 || box.left < -1; }).map(element => ({ tag: element.tagName, className: element.className, text: element.textContent?.trim().slice(0, 60), box: element.getBoundingClientRect().toJSON() }))))).toBeTruthy();
  await page.getByRole('link', { name: 'Annuler', exact: true }).focus(); await page.keyboard.press('Enter');
  await expect(page.getByRole('heading', { name: 'Clavier samedi' })).toBeVisible();
 });

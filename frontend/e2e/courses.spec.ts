@@ -527,7 +527,11 @@ test('inventaire complet : recherche, pages, duplication, archive et reprise apr
   await expect(copy).toBeVisible();
   await copy.locator('summary').click();
   await copy.getByRole('button', { name: 'Restaurer', exact: true }).click();
+  // La restauration recharge l’inventaire : attendre sa confirmation avant
+  // de saisir dans les nouveaux contrôles, au lieu de l’ancien DOM.
+  await expect(page.locator('.inventory-count')).toHaveText('0 listes · page 1 / 1');
   await page.getByLabel('Afficher les listes').selectOption('all');
+  await expect(copy.locator('.inventory-state')).toHaveText('À préparer');
   await page
     .getByRole('searchbox', { name: 'Rechercher une liste' })
     .fill('introuvable');

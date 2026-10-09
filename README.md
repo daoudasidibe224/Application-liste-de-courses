@@ -1,5 +1,7 @@
 # Carnet de courses
 
+[Essayer la démo publique](https://carnet-de-courses.onrender.com). Le premier chargement peut prendre environ une minute après la mise en veille du service gratuit.
+
 Dépôt public : [daoudasidibe224/carnet-de-courses](https://github.com/daoudasidibe224/carnet-de-courses).
 
 Une application pour préparer ses courses et suivre les produits achetés. Chaque compte dispose de ses propres listes, enregistrées dans MongoDB.

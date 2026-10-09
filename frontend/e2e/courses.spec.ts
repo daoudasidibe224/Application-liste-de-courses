@@ -1,4 +1,26 @@
 import { test, expect } from '@playwright/test';
+test('le ticket de connexion est stylé sous la CSP de production', async ({ page }) => {
+  for (const width of [1440, 800, 390, 320]) {
+    await page.setViewportSize({ width, height: 900 });
+    const response = await page.goto('/login');
+    expect(response?.headers()['content-security-policy']).toContain("script-src 'self'");
+    await expect(page.getByRole('heading', { name: 'Se connecter', exact: true })).toBeVisible();
+    await expect(page.locator('.auth-card')).toHaveCSS('border-top-width', '5px');
+    await expect(page.locator('.auth-card')).toHaveCSS('background-color', 'rgb(255, 255, 255)');
+    await expect(page.getByRole('heading', { name: 'Carnet de courses', exact: true })).toHaveCSS('font-family', '"Barlow Condensed", sans-serif');
+    const layout = await page.evaluate(() => {
+      const email = document.querySelector<HTMLInputElement>('input[name="email"]')!.getBoundingClientRect();
+      const password = document.querySelector<HTMLInputElement>('input[name="password"]')!.getBoundingClientRect();
+      const card = document.querySelector('.auth-card')!.getBoundingClientRect();
+      return { fieldsStacked: password.top > email.bottom, centered: Math.abs(card.left + card.width / 2 - innerWidth / 2) < 2, overflow: document.documentElement.scrollWidth > innerWidth };
+    });
+    expect(layout).toEqual({ fieldsStacked: true, centered: true, overflow: false });
+  }
+  await page.getByRole('link', { name: 'Créer un compte', exact: true }).click();
+  await expect(page).toHaveURL(/inscription$/);
+  await expect(page.locator('.auth-card')).toHaveCSS('border-top-width', '5px');
+});
+
 test('parcours réel : compte, listes, produits, filtres et déconnexion', async ({
   page,
 }) => {

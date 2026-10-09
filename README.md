@@ -118,7 +118,7 @@ Le projet n'intègre pas de réinitialisation de mot de passe, de vérification 
 
 ## Préparation Render gratuit
 
-`render.yaml` décrit un service Docker gratuit, sur la branche `improve/public-2026-10`, avec une seule instance, un contrôle `/health` et des déploiements automatiques désactivés. Il ne lance aucun service à lui seul. Importer le Blueprint dans un compte Render puis saisir les valeurs `sync: false` dans le tableau de bord. `PORT` est fourni par Render ; l’application écoute cette valeur. Les secrets ne sont jamais inclus dans le dépôt. [Référence du Blueprint](https://render.com/docs/blueprint-spec).
+`render.yaml` décrit un service Docker gratuit, sur la branche `develop`, avec une seule instance, un contrôle `/health` et des déploiements automatiques désactivés. Il ne lance aucun service à lui seul. Importer le Blueprint dans un compte Render puis saisir les valeurs `sync: false` dans le tableau de bord. `PORT` est fourni par Render ; l’application écoute cette valeur. Les secrets ne sont jamais inclus dans le dépôt. [Référence du Blueprint](https://render.com/docs/blueprint-spec).
 
 MongoDB doit être séparé du service : un cluster Atlas Free, anciennement M0, convient pour une petite démonstration durable avec bases distinctes et droits restreints. Renseigner son URI et autoriser les adresses sortantes du service dans Atlas. Il offre 512 Mo, limite le débit à 100 opérations par seconde et ne fournit pas de sauvegarde automatique ; prévoir un export manuel. Il peut se mettre en pause après trente jours sans connexion. [Limites Atlas Free](https://www.mongodb.com/docs/atlas/reference/free-shared-limitations/).
 

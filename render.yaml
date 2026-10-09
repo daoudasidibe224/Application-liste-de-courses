@@ -3,7 +3,7 @@ services:
     name: carnet-de-courses
     runtime: docker
     repo: https://github.com/daoudasidibe224/carnet-de-courses
-    branch: improve/public-2026-10
+    branch: develop
     plan: free
     region: frankfurt
     numInstances: 1
